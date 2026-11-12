@@ -1,0 +1,10 @@
+### 1. 线程池舱壁：8 个并发，下游耗时 1s
+# 预期：2 个约 1s 完成，2 个排队约 2s 完成，4 个立即被拒绝（BulkheadFullException）
+GET http://localhost:8202/demo/bulkhead/tp-bulkhead?concurrency=8&delayMs=1000
+
+### 2. 信号量舱壁：8 个并发
+# 预期：2 个约 1s 完成，6 个立即被拒绝（没有队列）
+GET http://localhost:8202/demo/bulkhead/sem-bulkhead?concurrency=8&delayMs=1000
+
+### 3. 没有配置过的 id：使用默认的线程池舱壁（核心线程数 = CPU 核数 - 1，队列容量 100）
+GET http://localhost:8202/demo/bulkhead/default-bulkhead?concurrency=8&delayMs=1000

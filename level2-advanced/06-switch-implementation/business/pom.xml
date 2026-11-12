@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.kai.learn.cbdemo</groupId>
+        <artifactId>cbdemo-l2-06-switch-implementation</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>cbdemo-l2-06-business</artifactId>
+    <name>cbdemo :: L2-06 业务代码（只依赖抽象）</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.kai.learn.cbdemo</groupId>
+            <artifactId>cbdemo-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
+        <!--
+          【原理】业务模块只依赖 spring-cloud-commons，其中只有 CircuitBreakerFactory / CircuitBreaker 这些接口，
+          没有任何实现。具体用哪个实现，由最终运行的 app 模块引入哪个 starter 决定。
+          这和 SLF4J（接口）+ Logback（实现）是同一种设计。
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-commons</artifactId>
+        </dependency>
+    </dependencies>
+</project>

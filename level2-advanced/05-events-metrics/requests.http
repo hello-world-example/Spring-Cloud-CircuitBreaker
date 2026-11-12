@@ -1,0 +1,26 @@
+### 1. 产生一些正常调用，再让下游报错并产生失败调用
+POST http://localhost:8081/chaos?mode=NORMAL
+
+###
+GET http://localhost:8205/demo/burst?n=5
+
+###
+POST http://localhost:8081/chaos?mode=ERROR
+
+###
+GET http://localhost:8205/demo/burst?n=10
+
+### 2. 自己记录的事件：能看到 ERROR、STATE_TRANSITION（CLOSED_TO_OPEN）、NOT_PERMITTED
+GET http://localhost:8205/demo/events
+
+### 3. Prometheus 格式的指标，搜索 resilience4j_circuitbreaker
+GET http://localhost:8205/actuator/prometheus
+
+### 4. 单个指标
+GET http://localhost:8205/actuator/metrics/resilience4j.circuitbreaker.state
+
+### 5. 健康检查
+GET http://localhost:8205/actuator/health
+
+### 6. Resilience4j 自带的端点（Spring Boot 4 下是否可用，见 README 的实测结果）
+GET http://localhost:8205/actuator/circuitbreakers

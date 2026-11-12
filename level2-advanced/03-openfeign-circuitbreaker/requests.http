@@ -1,0 +1,17 @@
+### 1. 正常调用几次，然后查看自动创建的熔断器名称与配置（failureRateThreshold 应为 40，来自 configs.downstream）
+GET http://localhost:8203/demo/burst?n=3
+
+###
+GET http://localhost:8203/demo/breakers
+
+### 2. 下游报错：Feign 方法自动熔断、自动降级
+POST http://localhost:8081/chaos?mode=ERROR
+
+###
+GET http://localhost:8203/demo/burst?n=10
+
+### 3. Feign 读超时（1s）先于 TimeLimiter（2s）触发：降级原因是 RetryableException（Read timed out）
+POST http://localhost:8081/chaos?mode=NORMAL
+
+###
+GET http://localhost:8203/demo/slow?delayMs=1500

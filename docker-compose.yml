@@ -1,0 +1,40 @@
+# -----------------------------------------------------------------------------
+# 监控组件，只有 L4-02 需要。其他模块都不依赖 Docker。
+#
+#   docker compose up -d
+#   Prometheus: http://localhost:9090      Grafana: http://localhost:3000（匿名访问，无需登录）
+#
+# 应用运行在宿主机上（8402、8205），容器中通过 host.docker.internal 访问宿主机。
+# -----------------------------------------------------------------------------
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+    extra_hosts:
+      # Linux 上的 Docker 默认没有 host.docker.internal，需要手动映射
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    ports:
+      - "3000:3000"
+    environment:
+      # 学习环境：开启匿名访问并赋予管理员权限，省去登录。生产环境切勿这样配置
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_healthy

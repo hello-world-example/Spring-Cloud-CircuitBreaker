@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.kai.learn.cbdemo</groupId>
+        <artifactId>cbdemo-l2</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>cbdemo-l2-02-bulkhead</artifactId>
+    <name>cbdemo :: L2-02 舱壁隔离（8202）</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.kai.learn.cbdemo</groupId>
+            <artifactId>cbdemo-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+        <!--
+          【原理】舱壁是「按需启用」的：spring-cloud-starter-circuitbreaker-resilience4j 并不包含 resilience4j-bulkhead，
+          只有类路径中存在它时，Resilience4JAutoConfiguration 才会创建 Resilience4jBulkheadProvider，
+          并把舱壁包进每一次 run() 调用中。
+          关闭方式：spring.cloud.circuitbreaker.bulkhead.resilience4j.enabled=false
+        -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-bulkhead</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

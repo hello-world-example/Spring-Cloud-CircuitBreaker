@@ -1,0 +1,38 @@
+server:
+  port: 8402
+
+spring:
+  application:
+    name: cbdemo-l4-02
+
+downstream:
+  base-url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: TIME_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 20
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 2s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,circuitbreakers
+  metrics:
+    tags:
+      # 所有指标都带上应用名，多个应用接入同一个 Prometheus 时可以区分
+      application: ${spring.application.name}
+    distribution:
+      # 为调用耗时生成直方图桶，Grafana 中才能计算 P99
+      percentiles-histogram:
+        resilience4j.circuitbreaker.calls: true

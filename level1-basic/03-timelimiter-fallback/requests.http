@@ -1,0 +1,15 @@
+### 1. 超时：下游 1000ms 才返回，TimeLimiter 在 500ms 时超时降级
+# 观察：costMs≈500；callerThread 是 Tomcat 线程；然后去看控制台中后台线程的日志
+GET http://localhost:8103/demo/timeout?delayMs=1000
+
+### 2. 下游在超时时间内返回：正常结果
+GET http://localhost:8103/demo/timeout?delayMs=200
+
+### 3. 4xx：每次都原样抛出，state 始终是 CLOSED（ignore-exceptions 生效）
+GET http://localhost:8103/demo/status/400?n=8
+
+### 4. 5xx：计为失败，几次之后变为 OPEN，降级原因变为「熔断中」
+GET http://localhost:8103/demo/status/500?n=8
+
+### 5. 不提供降级函数
+GET http://localhost:8103/demo/no-fallback

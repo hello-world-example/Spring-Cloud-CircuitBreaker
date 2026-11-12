@@ -1,0 +1,46 @@
+server:
+  port: 8202
+
+spring:
+  application:
+    name: cbdemo-l2-02
+
+downstream:
+  base-url: http://localhost:8081
+
+resilience4j:
+  # ---------------------------------------------------------------------------
+  # 线程池舱壁：2 个线程 + 容量为 2 的队列 → 同一时刻最多 2 个执行、2 个排队，其余立即拒绝
+  # ---------------------------------------------------------------------------
+  thread-pool-bulkhead:
+    instances:
+      tp-bulkhead:
+        core-thread-pool-size: 2
+        max-thread-pool-size: 2
+        queue-capacity: 2
+
+  # ---------------------------------------------------------------------------
+  # 信号量舱壁：最多 2 个并发；拿不到许可时最多等待 max-wait-duration（0 = 不等待，立即拒绝）
+  # ---------------------------------------------------------------------------
+  bulkhead:
+    instances:
+      sem-bulkhead:
+        max-concurrent-calls: 2
+        max-wait-duration: 0
+
+  circuitbreaker:
+    configs:
+      default:
+        # 舱壁拒绝（BulkheadFullException）发生在熔断器内部，默认也会计为熔断器的失败。
+        # 本实验中把阈值调高，避免舱壁拒绝把熔断器打开、干扰观察
+        failure-rate-threshold: 100
+        minimum-number-of-calls: 100
+
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 5s
+
+logging:
+  level:
+    org.springframework.cloud.circuitbreaker: debug

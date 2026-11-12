@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.kai.learn.cbdemo</groupId>
+        <artifactId>cbdemo-l2-06-switch-implementation</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>cbdemo-l2-06-spring-retry-app</artifactId>
+    <name>cbdemo :: L2-06 实现二：Spring Retry（8206）</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.kai.learn.cbdemo</groupId>
+            <artifactId>cbdemo-l2-06-business</artifactId>
+        </dependency>
+        <!-- 基于 Spring Retry 项目（org.springframework.retry），该项目目前处于维护状态 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-spring-retry</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

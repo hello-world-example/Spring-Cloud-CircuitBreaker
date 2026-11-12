@@ -1,0 +1,58 @@
+server:
+  port: 8102
+
+spring:
+  application:
+    name: cbdemo-l1-02
+
+downstream:
+  base-url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    # -------------------------------------------------------------------------
+    # configs：命名配置（模板），本身不会创建熔断器。
+    #   - configs.default 是所有熔断器的默认配置
+    #   - 其他名称可以通过 base-config 继承，或者作为 create(id, group) 中的 group 被匹配到
+    # -------------------------------------------------------------------------
+    configs:
+      default:
+        # 窗口类型：COUNT_BASED 统计最近 N 次调用；TIME_BASED 统计最近 N 秒的调用
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        # 窗口内至少有这么多次调用才计算失败率，防止「刚启动时 1 次调用失败 = 失败率 100%」就熔断
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        # OPEN 状态持续的时间。还可以配置指数退避：enable-exponential-backoff + exponential-backoff-multiplier
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        # 【坑】默认为 false：OPEN 状态等待结束后，并不会自动变为 HALF_OPEN，而是等「下一次调用」到来时才切换。
+        # 所以没有流量时，看到的状态会一直是 OPEN。设为 true 会额外启动一个调度线程，到点自动切换
+        automatic-transition-from-open-to-half-open-enabled: false
+        # 记录到 HALF_OPEN 之后，最多等多久的探测结果（0 表示一直等待）
+        max-wait-duration-in-half-open-state: 0
+      strict:
+        base-config: default
+        failure-rate-threshold: 20
+
+    # -------------------------------------------------------------------------
+    # instances：在启动时就创建好的熔断器实例，优先级最高
+    # -------------------------------------------------------------------------
+    instances:
+      yaml-instance:
+        base-config: default
+        failure-rate-threshold: 80
+      slow-call:
+        base-config: default
+        # 【原理】慢调用熔断：调用虽然成功了，但耗时超过阈值，同样被视为「不健康」。
+        # 下游变慢往往是故障的前兆（比如数据库连接池即将耗尽），比报错更早出现
+        slow-call-duration-threshold: 500ms
+        slow-call-rate-threshold: 50
+        # 按时间窗口统计：最近 10 秒内的调用
+        sliding-window-type: TIME_BASED
+        sliding-window-size: 10
+
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s

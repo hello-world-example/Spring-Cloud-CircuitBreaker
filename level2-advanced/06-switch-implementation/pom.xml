@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  L2-06：同一份业务代码（business），分别搭配三种熔断实现运行。
+  三个 app 子模块的区别只有「引入了哪个 starter」和「怎样配置」，业务代码完全相同。
+  它们使用同一个端口 8206，一次只运行一个。
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.kai.learn.cbdemo</groupId>
+        <artifactId>cbdemo-l2</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>cbdemo-l2-06-switch-implementation</artifactId>
+    <packaging>pom</packaging>
+    <name>cbdemo :: L2-06 切换熔断实现</name>
+
+    <modules>
+        <module>business</module>
+        <module>resilience4j-app</module>
+        <module>spring-retry-app</module>
+        <module>framework-retry-app</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.kai.learn.cbdemo</groupId>
+                <artifactId>cbdemo-l2-06-business</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

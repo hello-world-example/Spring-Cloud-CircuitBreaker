@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  模拟下游服务（端口 8081）：可以在运行时切换故障模式（正常 / 慢 / 报错 / 随机失败），
+  供所有学习模块调用。它是学习的「道具」，本身不涉及熔断知识点。
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.kai.learn.cbdemo</groupId>
+        <artifactId>cbdemo-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>cbdemo-downstream</artifactId>
+    <name>cbdemo :: downstream（模拟下游，8081）</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.kai.learn.cbdemo</groupId>
+            <artifactId>cbdemo-common</artifactId>
+        </dependency>
+        <!-- Spring Boot 4 中 starter-web 改名为 starter-webmvc（旧名称仍然可用，但已标记为过时） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

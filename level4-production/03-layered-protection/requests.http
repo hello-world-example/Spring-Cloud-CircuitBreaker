@@ -1,0 +1,8 @@
+### 0. 下游正常（库存接口正常，推荐接口固定延迟由参数控制）
+POST http://localhost:8081/chaos?mode=NORMAL
+
+### 1. 单个页面：推荐服务 2 秒才返回 → 300ms 超时降级，recommendations 为空
+GET http://localhost:8403/demo/page?recommendDelayMs=2000
+
+### 2. 对比实验：60 个请求同时到达，20 个容器线程，推荐服务慢 2 秒
+GET http://localhost:8403/demo/compare?requests=60&recommendDelayMs=2000

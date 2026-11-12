@@ -1,0 +1,40 @@
+server:
+  port: 8203
+
+spring:
+  application:
+    name: cbdemo-l2-03
+  cloud:
+    openfeign:
+      circuitbreaker:
+        # 开启后，每个 @FeignClient 的方法都会被熔断器包裹（默认关闭）
+        enabled: true
+        group:
+          # 以 @FeignClient(name = "downstream") 中的 name 作为 group，配合下面的 configs.downstream 使用
+          enabled: true
+      client:
+        config:
+          downstream:
+            # 【生产】Feign（HTTP 层）的超时应当 ≤ TimeLimiter 的超时，原因见 L1-03
+            connect-timeout: 1000
+            read-timeout: 1000
+
+downstream:
+  base-url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+      # 按 group（= Feign 客户端名称）配置：这个客户端的所有方法都使用 40%
+      downstream:
+        base-config: default
+        failure-rate-threshold: 40
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 2s

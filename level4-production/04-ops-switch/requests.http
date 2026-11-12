@@ -1,0 +1,44 @@
+### 0. 下游正常
+POST http://localhost:8081/chaos?mode=NORMAL
+
+### 1. 正常调用，查看熔断器
+GET http://localhost:8404/demo/burst?n=5
+
+###
+GET http://localhost:8404/ops/breakers
+
+### 2. 强制熔断：下游明明是健康的，但所有调用都被拒绝
+POST http://localhost:8404/ops/breakers/inventory/force-open
+
+###
+GET http://localhost:8404/demo/burst?n=5
+
+### 3. 关闭熔断：下游全部报错，但熔断器不会打开
+POST http://localhost:8404/ops/breakers/inventory/disable
+
+###
+POST http://localhost:8081/chaos?mode=ERROR
+
+###
+GET http://localhost:8404/demo/burst?n=10
+
+### 4. 只统计不拦截：失败率会被统计出来，但不会打开
+POST http://localhost:8404/ops/breakers/inventory/metrics-only
+
+###
+GET http://localhost:8404/demo/burst?n=10
+
+###
+GET http://localhost:8404/ops/breakers
+
+### 5. 恢复正常的状态机
+POST http://localhost:8404/ops/breakers/inventory/reset
+
+### 6. 动态调参：把阈值放宽到 90%，下游 FLAKY 60% 时就不会熔断了
+POST http://localhost:8404/ops/breakers/inventory/config?failureRateThreshold=90&waitSeconds=10
+
+###
+POST http://localhost:8081/chaos?mode=FLAKY&failRate=60
+
+###
+GET http://localhost:8404/demo/burst?n=20

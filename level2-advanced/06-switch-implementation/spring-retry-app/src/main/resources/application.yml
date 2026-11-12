@@ -1,0 +1,7 @@
+server:
+  port: 8206
+spring:
+  application:
+    name: cbdemo-l2-06-spring-retry
+downstream:
+  base-url: http://localhost:8081

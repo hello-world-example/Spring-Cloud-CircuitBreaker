@@ -1,0 +1,38 @@
+server:
+  port: 8103
+
+spring:
+  application:
+    name: cbdemo-l1-03
+
+downstream:
+  base-url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        # -------------------------------------------------------------------
+        # 【原理】哪些异常算「失败」：
+        #   record-exceptions：只有这些异常（及其子类）计为失败；不配置时，所有异常都计为失败
+        #   ignore-exceptions：这些异常既不算失败也不算成功，完全不参与统计
+        # 4xx 是调用方的问题，下游是健康的，不应该触发熔断。
+        # 【坑】TimeoutException 默认也计为失败，这是期望的行为：慢到超时的下游同样不健康
+        # -------------------------------------------------------------------
+        ignore-exceptions:
+          - org.springframework.web.client.HttpClientErrorException
+
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+    instances:
+      fast-timeout:
+        timeout-duration: 500ms
+        # 超时后是否调用 Future.cancel(true) 中断工作线程（默认 true）。
+        # 中断只是设置一个标志，阻塞在网络 I/O 上的代码未必会响应中断
+        cancel-running-future: true

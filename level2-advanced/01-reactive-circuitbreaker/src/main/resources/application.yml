@@ -1,0 +1,27 @@
+server:
+  port: 8201
+
+spring:
+  application:
+    name: cbdemo-l2-01
+
+downstream:
+  base-url: http://localhost:8081
+
+# 配置方式与阻塞版本完全相同，同一套 resilience4j.* 配置项
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+    instances:
+      reactive-timeout:
+        timeout-duration: 500ms

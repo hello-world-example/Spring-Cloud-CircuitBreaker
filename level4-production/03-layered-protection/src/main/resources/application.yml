@@ -1,0 +1,38 @@
+server:
+  port: 8403
+
+spring:
+  application:
+    name: cbdemo-l4-03
+
+downstream:
+  base-url: http://localhost:8081
+
+resilience4j:
+  # 两个依赖都使用信号量舱壁，避免默认线程池舱壁的额外线程开销（见 L2-02）
+  bulkhead:
+    instances:
+      inventory:
+        max-concurrent-calls: 50
+      recommend:
+        # 弱依赖最多只允许 5 个并发，多出来的请求立即降级
+        max-concurrent-calls: 5
+        max-wait-duration: 0
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        # 舱壁拒绝不代表下游不健康，不计入失败率（见 L2-02 思考题）
+        ignore-exceptions:
+          - io.github.resilience4j.bulkhead.BulkheadFullException
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 1s
+    instances:
+      # 弱依赖的超时时间要短：用户不会为了「推荐」多等
+      recommend:
+        timeout-duration: 300ms

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  根 POM：只负责「聚合模块」「统一管理版本」和「统一构建配置」，自身不包含代码。
+
+  【原理】依赖版本通过 import BOM 管理，而不是继承 spring-boot-starter-parent：
+    - <scope>import</scope> + <type>pom</type>：把 BOM 中 <dependencyManagement> 的条目「复制」到当前 POM 中，
+      子模块引入依赖时不用写版本
+    - 可以 import 任意多个 BOM（本项目 import 了 Spring Boot 和 Spring Cloud 两个）
+    - Maven 只允许有一个 parent，用 import 的方式就能把 parent 的位置留给公司或个人的统一父 POM
+
+  【对比】继承 spring-boot-starter-parent 时，除了依赖版本，还会「顺带」获得一些默认构建配置。
+    改用 import 之后，这些配置要在下面的 <properties> 和 <pluginManagement> 中自己写：
+      编码 UTF-8、Java 版本（release）    → <properties>
+      编译器开启 -parameters              → maven-compiler-plugin
+      插件版本                            → <pluginManagement>（BOM 只管理依赖，不管理插件）
+      spring-boot-maven-plugin 的 repackage → 显式声明 execution，否则打出的 jar 不能用 java -jar 运行
+
+  【坑】忘记 -parameters 时，编译完全正常，但运行时 @RequestParam int n、@PathVariable String id 这类
+    没有显式写名字的参数会报错：Name for argument of type [int] not specified, and parameter name
+    information not available via reflection. Ensure that the compiler uses the '-parameters' flag.
+
+  【坑】import 多个 BOM 时，<dependencyManagement> 中先声明的优先。Spring Cloud 的 BOM 中也有部分依赖与
+    Spring Boot 重叠，所以 Spring Boot 的 BOM 放在前面，以 Boot 的版本为准。
+
+  【对比】为什么 Spring Cloud 用 Release Train（2025.1.x）而不是一个统一的版本号？
+    Spring Cloud 是十几个独立项目（Commons、CircuitBreaker、Gateway、OpenFeign……）的集合，每个项目都有自己的版本号
+    （例如 CircuitBreaker 是 5.0.3）。Release Train 是一份「经过验证可以一起使用」的版本清单，也就是 spring-cloud-dependencies 这个 BOM。
+
+  【坑】Spring Boot 和 Spring Cloud 的版本必须配套使用：
+    Spring Cloud 2025.1.x  <->  Spring Boot 4.0.x
+    Spring Cloud 2026.0.x  <->  Spring Boot 4.1.x（生成本项目时 2026.0 还处于 RC 阶段，所以没有选用）
+    版本不匹配时，Spring Cloud 的 CompatibilityVerifier 会在启动时报错，或者运行时出现 NoSuchMethodError。
+    官方兼容表：https://spring.io/projects/spring-cloud
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.kai.learn.cbdemo</groupId>
+    <artifactId>cbdemo-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>cbdemo :: Spring Cloud CircuitBreaker 学习项目</name>
+
+    <modules>
+        <module>cbdemo-common</module>
+        <module>cbdemo-downstream</module>
+        <module>level1-basic</module>
+        <module>level2-advanced</module>
+        <module>level3-principle</module>
+        <module>level4-production</module>
+    </modules>
+
+    <properties>
+        <!-- 本机是 JDK 25；Spring Boot 4.0 支持 JDK 17 ~ 25 -->
+        <java.version>25</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <spring-boot.version>4.0.9</spring-boot.version>
+        <!--
+          Spring Cloud Release Train。2025.1.4 中包含的组件版本：
+            spring-cloud-circuitbreaker 5.0.3（Resilience4j 2.3.0）
+            spring-cloud-gateway        5.0.x
+            spring-cloud-openfeign      5.0.x
+        -->
+        <spring-cloud.version>2025.1.4</spring-cloud.version>
+
+        <!-- 插件版本：与 spring-boot-dependencies 4.0.9 中声明的版本保持一致 -->
+        <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+        <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- 先 import Spring Boot 的 BOM：重叠的依赖以它为准 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- 再 import Spring Cloud 的 BOM：之后所有 org.springframework.cloud 和 io.github.resilience4j 的依赖都不用写版本 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- 项目内部的模块也统一在这里管理版本 -->
+            <dependency>
+                <groupId>com.kai.learn.cbdemo</groupId>
+                <artifactId>cbdemo-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- 所有模块都需要测试依赖，放在根 POM 中统一引入 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <!-- 保留方法参数名，Spring MVC 按参数名绑定 @RequestParam / @PathVariable 时需要 -->
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven-resources-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven-jar-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${maven-install-plugin.version}</version>
+                </plugin>
+                <!-- 只有可以运行的模块才在自己的 <build> 中声明这个插件（不用写版本） -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                    <executions>
+                        <!-- 把普通 jar 重新打包成可以 java -jar 运行的 fat jar（parent 中默认配置了这一项） -->
+                        <execution>
+                            <id>repackage</id>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  公共模块：只放与知识点无关的「噪音」代码（统一返回体、调用记录、下游 HTTP 客户端等），
+  这样各个学习模块里留下的都是要讲解的核心代码。
+  它是普通 jar，不能单独运行，所以不启用 spring-boot-maven-plugin。
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.kai.learn.cbdemo</groupId>
+        <artifactId>cbdemo-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>cbdemo-common</artifactId>
+    <name>cbdemo :: common</name>
+
+    <dependencies>
+        <!--
+          optional：只有 DownstreamApi 用到 spring-web。标记为 optional 后不会传递给依赖方，
+          L3 这类纯 Java 模块依赖 common 时就不会被动引入 Spring Web。
+        -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>

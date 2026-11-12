@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: cbdemo-l2-04-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # -----------------------------------------------------------------
+            # 访问 http://localhost:8080/ds/api/data → 去掉前缀 /ds → 转发到 http://localhost:8081/api/data
+            # -----------------------------------------------------------------
+            - id: downstream
+              uri: http://localhost:8081
+              predicates:
+                - Path=/ds/**
+              filters:
+                - StripPrefix=1
+                # 【原理】CircuitBreaker 过滤器 = ReactiveCircuitBreakerFactory.create(name).run(chain.filter(exchange), fallback)
+                # 也就是把「转发到下游」这整个过程包在响应式熔断器中
+                - name: CircuitBreaker
+                  args:
+                    # 熔断器 id，对应下面的 resilience4j.circuitbreaker.instances.downstreamCB
+                    name: downstreamCB
+                    fallbackUri: forward:/fallback/downstream
+                    # 【坑】网关转发时，下游返回 500 并不会抛出异常：对网关来说，这只是一个「成功转发的 500 响应」。
+                    # 必须在 statusCodes 中声明哪些状态码要视为失败，熔断器才会统计它们
+                    statusCodes:
+                      - 500
+                      - 502
+                      - 503
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      downstreamCB:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+  timelimiter:
+    instances:
+      downstreamCB:
+        # 网关的超时：超过 1s 就返回降级结果（504）
+        timeout-duration: 1s

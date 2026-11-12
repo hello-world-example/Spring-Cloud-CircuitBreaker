@@ -1,0 +1,29 @@
+# 熔断相关的告警规则示例。在 Prometheus 的 Alerts 页面（http://localhost:9090/alerts）可以看到它们的状态。
+groups:
+  - name: circuitbreaker
+    rules:
+      # 熔断器打开超过 30 秒：说明下游持续故障，需要人工介入
+      - alert: CircuitBreakerOpen
+        expr: resilience4j_circuitbreaker_state{state="open"} == 1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "熔断器 {{ $labels.name }}（{{ $labels.application }}）已打开超过 30 秒"
+
+      # 熔断器在 OPEN / HALF_OPEN 之间反复切换（「抖动」）：通常说明阈值过于敏感，或者下游处于半故障状态
+      - alert: CircuitBreakerFlapping
+        expr: changes(resilience4j_circuitbreaker_state{state="open"}[5m]) > 4
+        labels:
+          severity: warning
+        annotations:
+          summary: "熔断器 {{ $labels.name }} 在 5 分钟内状态变化超过 4 次"
+
+      # 失败率接近阈值：提前预警（这里假设阈值为 50%）
+      - alert: CircuitBreakerFailureRateHigh
+        expr: resilience4j_circuitbreaker_failure_rate > 30
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "熔断器 {{ $labels.name }} 的失败率为 {{ $value }}%，接近阈值"

@@ -1,0 +1,35 @@
+server:
+  port: 8101
+
+spring:
+  application:
+    name: cbdemo-l1-01
+
+downstream:
+  base-url: http://localhost:8081
+
+# ---------------------------------------------------------------------------
+# 【原理】这些配置项是 Resilience4j 自己的（前缀不是 spring.cloud），由 resilience4j-spring-boot3 负责绑定。
+# instances.<id> 中的 id 就是代码里 factory.create("downstream") 传入的 id。
+# 默认值（窗口 100 次、至少 100 次调用才开始计算）在学习时很难观察，所以这里调小。参数的详细说明见 L1-02。
+# ---------------------------------------------------------------------------
+resilience4j:
+  circuitbreaker:
+    instances:
+      downstream:
+        sliding-window-type: COUNT_BASED     # 按最近 N 次调用统计
+        sliding-window-size: 10              # N = 10
+        minimum-number-of-calls: 5           # 至少 5 次调用之后才计算失败率
+        failure-rate-threshold: 50           # 失败率 ≥ 50% 时 → OPEN
+        wait-duration-in-open-state: 5s      # OPEN 状态保持 5 秒
+        permitted-number-of-calls-in-half-open-state: 3   # HALF_OPEN 状态放行 3 个探测请求
+  timelimiter:
+    instances:
+      downstream:
+        # 【坑】TimeLimiter 的默认超时只有 1 秒！不配置的话，超过 1 秒的正常调用也会被判为超时并走降级。
+        # 启动日志中的 "No timeLimiterConfig found for 'xxx'" 警告就是在提醒这件事。
+        timeout-duration: 3s
+
+logging:
+  level:
+    io.github.resilience4j: info

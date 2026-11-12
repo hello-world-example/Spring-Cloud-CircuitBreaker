@@ -1,0 +1,25 @@
+### 0. 下游恢复正常（并清零下游的请求计数）
+POST http://localhost:8081/chaos?mode=NORMAL
+
+### 1. 正常调用：source=downstream，state=CLOSED
+GET http://localhost:8101/demo/burst?n=5
+
+### 2. 让下游全部返回 500
+POST http://localhost:8081/chaos?mode=ERROR
+
+### 3. 连续调用 15 次：几次真实失败后变为 OPEN → 后面的调用 costMs≈0，直接被拒绝
+# 第几次变为 OPEN 取决于窗口中原有的记录：如果第 1 步已经有 5 次成功，再失败 5 次就是 10 次中失败 5 次（50%），
+# 也就是第 5 次失败后变为 OPEN；如果只有 3 次成功，第 3 次失败后就达到 6 次中失败 3 次，变为 OPEN。
+GET http://localhost:8101/demo/burst?n=15
+
+### 4. 下游收到的请求数 = 真实失败的次数：OPEN 状态的请求根本没有发出去
+GET http://localhost:8081/chaos
+
+### 5. 查看熔断器统计：notPermittedCalls = 被拒绝的次数
+GET http://localhost:8101/demo/state
+
+### 6. 下游恢复后等待 5 秒以上，再调用：OPEN → HALF_OPEN → 3 次探测成功 → CLOSED
+POST http://localhost:8081/chaos?mode=NORMAL
+
+###
+GET http://localhost:8101/demo/burst?n=5

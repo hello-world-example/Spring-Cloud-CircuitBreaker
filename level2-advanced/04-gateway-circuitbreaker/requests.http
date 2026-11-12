@@ -1,0 +1,20 @@
+### 1. 通过网关正常访问下游
+POST http://localhost:8081/chaos?mode=NORMAL
+
+###
+GET http://localhost:8080/ds/api/data?caller=gateway
+
+### 2. 下游返回 500：前几次是 502（下游出错），之后变为 503（熔断中）
+POST http://localhost:8081/chaos?mode=ERROR
+
+### 连续执行这条请求 6~8 次
+GET http://localhost:8080/ds/api/data?caller=gateway
+
+###
+GET http://localhost:8080/fallback/state
+
+### 3. 超时：下游 2s，网关 1s 超时 → 504
+POST http://localhost:8081/chaos?mode=NORMAL
+
+###
+GET http://localhost:8080/ds/api/slow?delayMs=2000

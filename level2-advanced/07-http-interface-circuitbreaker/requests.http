@@ -1,0 +1,14 @@
+### 1. 正常调用
+POST http://localhost:8081/chaos?mode=NORMAL
+
+###
+GET http://localhost:8207/demo/burst?n=3
+
+### 2. 熔断器名称就是组名 downstream
+GET http://localhost:8207/demo/breakers
+
+### 3. 下游报错：降级方法 data(Throwable, String) 拿到了失败原因
+POST http://localhost:8081/chaos?mode=ERROR
+
+###
+GET http://localhost:8207/demo/burst?n=10

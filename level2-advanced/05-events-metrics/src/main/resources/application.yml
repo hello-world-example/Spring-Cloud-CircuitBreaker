@@ -1,0 +1,40 @@
+server:
+  port: 8205
+
+spring:
+  application:
+    name: cbdemo-l2-05
+
+downstream:
+  base-url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        # 把熔断器状态注册到 /actuator/health 中（OPEN 状态时健康状态为 CIRCUIT_OPEN）
+        register-health-indicator: true
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # circuitbreakers / circuitbreakerevents 是 resilience4j-spring-boot3 提供的端点
+        include: health,metrics,prometheus,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

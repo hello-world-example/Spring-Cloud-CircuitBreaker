@@ -1,0 +1,14 @@
+server:
+  port: 8081
+  tomcat:
+    threads:
+      # 调大下游的线程数，避免在舱壁实验中下游自己先成为瓶颈
+      max: 400
+
+spring:
+  application:
+    name: cbdemo-downstream
+  threads:
+    virtual:
+      # JDK 21+ 虚拟线程：SLOW 模式下大量请求 sleep 也不会占满平台线程
+      enabled: true

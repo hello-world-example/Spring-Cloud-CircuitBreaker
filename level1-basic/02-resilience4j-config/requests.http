@@ -1,0 +1,20 @@
+### 1. 查看 5 个 id 最终生效的配置（README 中有预期结果表）
+GET http://localhost:8102/demo/config
+
+### 2. 对比不同的失败率阈值：下游变为 FLAKY 50%，分别压测 customized（30%）与 yaml-instance（80%）
+POST http://localhost:8081/chaos?mode=FLAKY&failRate=50
+
+###
+GET http://localhost:8102/demo/burst/customized?n=20
+
+###
+GET http://localhost:8102/demo/burst/yaml-instance?n=20
+
+### 3. 慢调用熔断：下游每个请求都成功，但耗时 800ms
+POST http://localhost:8081/chaos?mode=SLOW&delayMs=800
+
+### source 一直是 downstream（调用成功），但调用若干次之后状态依然变为 OPEN
+GET http://localhost:8102/demo/burst/slow-call?n=10&intervalMs=0
+
+### 恢复
+POST http://localhost:8081/chaos?mode=NORMAL

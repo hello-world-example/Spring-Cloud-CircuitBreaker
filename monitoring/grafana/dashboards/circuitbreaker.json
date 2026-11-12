@@ -1,0 +1,125 @@
+{
+  "uid": "cbdemo-circuitbreaker",
+  "title": "cbdemo · 熔断器",
+  "tags": ["cbdemo", "resilience4j"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "application",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(resilience4j_circuitbreaker_state, application)",
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "state-timeline",
+      "title": "熔断器状态（0=CLOSED 1=OPEN 2=HALF_OPEN）",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by (name) (resilience4j_circuitbreaker_state{application=~\"$application\", state=\"open\"}) + 2 * max by (name) (resilience4j_circuitbreaker_state{application=~\"$application\", state=\"half_open\"})",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": {
+              "0": { "text": "CLOSED", "color": "green" },
+              "1": { "text": "OPEN", "color": "red" },
+              "2": { "text": "HALF_OPEN", "color": "orange" }
+            } }
+          ]
+        },
+        "overrides": []
+      },
+      "options": { "showValue": "auto", "mergeValues": true }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "失败率（%）",
+      "gridPos": { "x": 0, "y": 7, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "resilience4j_circuitbreaker_failure_rate{application=~\"$application\"}",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": -1,
+          "max": 100,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 50 } ] },
+          "custom": { "thresholdsStyle": { "mode": "line" } }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "每秒调用数（按结果）",
+      "gridPos": { "x": 12, "y": 7, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (name, kind) (rate(resilience4j_circuitbreaker_calls_seconds_count{application=~\"$application\"}[30s]))",
+          "legendFormat": "{{name}} {{kind}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (name) (rate(resilience4j_circuitbreaker_not_permitted_calls_total{application=~\"$application\"}[30s]))",
+          "legendFormat": "{{name}} not_permitted"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "调用耗时 P99（不含被拒绝的调用）",
+      "gridPos": { "x": 0, "y": 15, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.99, sum by (name, le) (rate(resilience4j_circuitbreaker_calls_seconds_bucket{application=~\"$application\"}[1m])))",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "慢调用比例（%）",
+      "gridPos": { "x": 12, "y": 15, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "resilience4j_circuitbreaker_slow_call_rate{application=~\"$application\"}",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": -1, "max": 100 }, "overrides": [] }
+    }
+  ]
+}

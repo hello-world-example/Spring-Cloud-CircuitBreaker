@@ -1,0 +1,14 @@
+### 1. 正常调用：注意 data.handledBy 是 reactor-http-nio-* 线程
+GET http://localhost:8201/demo/call
+
+### 2. 下游报错后连续调用，观察状态切换（与 L1-01 相同）
+POST http://localhost:8081/chaos?mode=ERROR
+
+###
+GET http://localhost:8201/demo/burst?n=10
+
+### 3. 超时：500ms 后降级为 TimeoutException（由 Reactor 的 timeout 操作符产生）
+POST http://localhost:8081/chaos?mode=NORMAL
+
+###
+GET http://localhost:8201/demo/timeout?delayMs=1000
