@@ -68,6 +68,13 @@
         -->
         <spring-cloud.version>2025.1.4</spring-cloud.version>
 
+        <!--
+          与 spring-boot-dependencies 4.0.9 中的 lombok.version 保持一致。
+          【坑】import BOM 只导入依赖版本，不导入 BOM 中的 <properties>；而注解处理器路径中的版本又不受
+          dependencyManagement 管理，所以这里要自己声明一次
+        -->
+        <lombok.version>1.18.48</lombok.version>
+
         <!-- 插件版本：与 spring-boot-dependencies 4.0.9 中声明的版本保持一致 -->
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
@@ -104,6 +111,16 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- 所有模块默认可用：Lombok（只在编译期使用，不会打进 jar）+ SLF4J 日志门面 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
         <!-- 所有模块都需要测试依赖，放在根 POM 中统一引入 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -122,6 +139,18 @@
                     <configuration>
                         <!-- 保留方法参数名，Spring MVC 按参数名绑定 @RequestParam / @PathVariable 时需要 -->
                         <parameters>true</parameters>
+                        <!--
+                          【坑】从 JDK 23 开始，javac 不再默认执行 classpath 上的注解处理器，Lombok 必须在这里显式声明，
+                          否则 @Slf4j 等注解不生效，编译报 cannot find symbol: variable log。
+                          显式声明后只会执行这里列出的处理器，以后用到 MapStruct 等也要加到这里
+                        -->
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
                     </configuration>
                 </plugin>
                 <plugin>

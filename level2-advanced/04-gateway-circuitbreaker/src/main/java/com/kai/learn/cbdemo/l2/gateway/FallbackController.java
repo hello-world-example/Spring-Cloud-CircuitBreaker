@@ -6,6 +6,7 @@ import java.util.Map;
 import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.Errors;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,13 +28,10 @@ import reactor.core.publisher.Mono;
  */
 @RestController
 @RequestMapping("/fallback")
+@RequiredArgsConstructor
 public class FallbackController {
 
     private final CircuitBreakerRegistry registry;
-
-    public FallbackController(CircuitBreakerRegistry registry) {
-        this.registry = registry;
-    }
 
     @RequestMapping("/downstream")
     public Mono<ResponseEntity<ApiResult<Map<String, Object>>>> downstream(ServerWebExchange exchange) {

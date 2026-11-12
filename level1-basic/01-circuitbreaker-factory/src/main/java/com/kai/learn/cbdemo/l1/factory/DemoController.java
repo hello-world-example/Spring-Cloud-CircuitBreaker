@@ -9,6 +9,7 @@ import com.kai.learn.cbdemo.common.CallRecord;
 import com.kai.learn.cbdemo.common.Timer;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,15 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
  * 因为不同实现的状态模型不同（见 L2-06）。
  */
 @RestController
+@RequiredArgsConstructor
 public class DemoController {
 
     private final ProductService productService;
     private final CircuitBreakerRegistry registry;
-
-    public DemoController(ProductService productService, CircuitBreakerRegistry registry) {
-        this.productService = productService;
-        this.registry = registry;
-    }
 
     @GetMapping("/demo/call")
     public ApiResult<Map<String, Object>> call() {

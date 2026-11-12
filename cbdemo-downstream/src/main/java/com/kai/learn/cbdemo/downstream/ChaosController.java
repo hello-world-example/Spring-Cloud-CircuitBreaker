@@ -2,8 +2,8 @@ package com.kai.learn.cbdemo.downstream;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,15 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
  * 运行时切换故障模式，并查看下游实际收到了多少请求。
  */
 @RestController
+@Slf4j
+@RequiredArgsConstructor
 public class ChaosController {
 
-    private static final Logger log = LoggerFactory.getLogger(ChaosController.class);
-
     private final ChaosState state;
-
-    public ChaosController(ChaosState state) {
-        this.state = state;
-    }
 
     @GetMapping("/chaos")
     public Map<String, Object> current() {

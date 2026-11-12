@@ -6,6 +6,7 @@ import java.util.Map;
 import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.CallRecord;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,15 +17,11 @@ import reactor.core.publisher.Mono;
  * 观察接口：返回值都是 Mono / Flux，由 WebFlux 负责订阅。
  */
 @RestController
+@RequiredArgsConstructor
 public class ReactiveDemoController {
 
     private final ReactiveProductService service;
     private final CircuitBreakerRegistry registry;
-
-    public ReactiveDemoController(ReactiveProductService service, CircuitBreakerRegistry registry) {
-        this.service = service;
-        this.registry = registry;
-    }
 
     @GetMapping("/demo/call")
     public Mono<ApiResult<Map<String, Object>>> call() {

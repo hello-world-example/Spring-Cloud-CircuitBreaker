@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,15 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
  * 不受机器性能和虚拟线程配置的影响。
  */
 @RestController
+@RequiredArgsConstructor
 public class LayeredDemoController {
 
     private static final int CONTAINER_THREADS = 20;
 
     private final ProductPageService service;
-
-    public LayeredDemoController(ProductPageService service) {
-        this.service = service;
-    }
 
     @GetMapping("/demo/page")
     public ProductPageService.Page page(@RequestParam(defaultValue = "2000") long recommendDelayMs) {

@@ -6,6 +6,7 @@ import java.util.Map;
 import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.DownstreamApi;
 import com.kai.learn.cbdemo.common.Errors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 
@@ -29,15 +30,11 @@ import org.springframework.stereotype.Service;
  * 这就是「弱依赖拖垮强依赖」，也是雪崩的起点。
  */
 @Service
+@RequiredArgsConstructor
 public class ProductPageService {
 
     private final CircuitBreakerFactory<?, ?> factory;
     private final DownstreamApi api;
-
-    public ProductPageService(CircuitBreakerFactory<?, ?> factory, DownstreamApi api) {
-        this.factory = factory;
-        this.api = api;
-    }
 
     public record Page(boolean inventoryOk, String inventoryMessage, List<String> recommendations,
                        boolean recommendDegraded) {

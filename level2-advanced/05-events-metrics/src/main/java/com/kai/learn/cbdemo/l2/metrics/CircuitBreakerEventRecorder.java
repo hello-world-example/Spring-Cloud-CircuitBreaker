@@ -13,8 +13,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,9 +35,9 @@ import org.springframework.stereotype.Component;
  * 否则会拖慢每一次业务调用。告警应该异步发送，并且要去重、限频。
  */
 @Component
+@Slf4j
 public class CircuitBreakerEventRecorder implements RegistryEventConsumer<CircuitBreaker> {
 
-    private static final Logger log = LoggerFactory.getLogger(CircuitBreakerEventRecorder.class);
     private static final int MAX_EVENTS = 100;
 
     public record EventView(ZonedDateTime time, String breaker, String type, String detail) {

@@ -11,8 +11,8 @@ import com.kai.learn.cbdemo.common.DownstreamApi;
 import com.kai.learn.cbdemo.common.Errors;
 import com.kai.learn.cbdemo.common.Timer;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,22 +31,14 @@ import org.springframework.web.client.HttpClientErrorException;
  * </ol>
  */
 @RestController
+@Slf4j
+@RequiredArgsConstructor
 public class TimeoutDemoController {
-
-    private static final Logger log = LoggerFactory.getLogger(TimeoutDemoController.class);
 
     private final CircuitBreakerFactory<?, ?> factory;
     private final CircuitBreakerRegistry registry;
     private final DownstreamApi api;
     private final FallbackResolver fallbackResolver;
-
-    public TimeoutDemoController(CircuitBreakerFactory<?, ?> factory, CircuitBreakerRegistry registry,
-                                 DownstreamApi api, FallbackResolver fallbackResolver) {
-        this.factory = factory;
-        this.registry = registry;
-        this.api = api;
-        this.fallbackResolver = fallbackResolver;
-    }
 
     @GetMapping("/demo/timeout")
     public Map<String, Object> timeout(@RequestParam(defaultValue = "1000") long delayMs) {

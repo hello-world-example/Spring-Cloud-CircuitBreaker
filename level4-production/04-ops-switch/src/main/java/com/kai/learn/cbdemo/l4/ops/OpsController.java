@@ -8,8 +8,8 @@ import java.util.Map;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,15 +50,11 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/ops/breakers")
+@Slf4j
+@RequiredArgsConstructor
 public class OpsController {
 
-    private static final Logger log = LoggerFactory.getLogger(OpsController.class);
-
     private final CircuitBreakerRegistry registry;
-
-    public OpsController(CircuitBreakerRegistry registry) {
-        this.registry = registry;
-    }
 
     @GetMapping
     public List<Map<String, Object>> list() {

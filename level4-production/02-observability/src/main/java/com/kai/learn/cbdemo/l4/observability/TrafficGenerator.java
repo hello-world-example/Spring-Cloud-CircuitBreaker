@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.DownstreamApi;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -21,16 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Component
 @RestController
+@RequiredArgsConstructor
 public class TrafficGenerator {
 
     private final CircuitBreakerFactory<?, ?> factory;
     private final DownstreamApi api;
     private final AtomicBoolean enabled = new AtomicBoolean(true);
-
-    public TrafficGenerator(CircuitBreakerFactory<?, ?> factory, DownstreamApi api) {
-        this.factory = factory;
-        this.api = api;
-    }
 
     @Scheduled(fixedRate = 100)
     public void tick() {

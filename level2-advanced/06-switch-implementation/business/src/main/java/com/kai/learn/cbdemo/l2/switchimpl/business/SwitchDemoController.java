@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.kai.learn.cbdemo.common.DownstreamApi;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,13 +24,10 @@ import org.springframework.web.client.RestClient;
  * </ul>
  */
 @RestController
+@RequiredArgsConstructor
 public class SwitchDemoController {
 
     private final InventoryService service;
-
-    public SwitchDemoController(InventoryService service) {
-        this.service = service;
-    }
 
     @GetMapping("/demo/impl")
     public Map<String, String> impl() {

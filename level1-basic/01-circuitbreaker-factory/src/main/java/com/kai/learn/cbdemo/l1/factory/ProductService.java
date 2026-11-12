@@ -4,8 +4,7 @@ import java.util.Map;
 
 import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.Errors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Service;
@@ -35,9 +34,8 @@ import org.springframework.stereotype.Service;
  * 隔离方式（线程池或信号量）可以自由组合。Sentinel 则多了「流控」的视角。见 docs/00-overview.md。
  */
 @Service
+@Slf4j
 public class ProductService {
-
-    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final DownstreamClient client;
     private final CircuitBreaker circuitBreaker;

@@ -14,6 +14,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
  * </pre>
  */
 @RestController
+@RequiredArgsConstructor
 public class ConfigDemoController {
 
     private static final Map<String, String> IDS = new LinkedHashMap<>();
@@ -50,14 +52,6 @@ public class ConfigDemoController {
     private final CircuitBreakerRegistry registry;
     private final TimeLimiterRegistry timeLimiterRegistry;
     private final DownstreamApi api;
-
-    public ConfigDemoController(CircuitBreakerFactory<?, ?> factory, CircuitBreakerRegistry registry,
-                                TimeLimiterRegistry timeLimiterRegistry, DownstreamApi api) {
-        this.factory = factory;
-        this.registry = registry;
-        this.timeLimiterRegistry = timeLimiterRegistry;
-        this.api = api;
-    }
 
     /** 所有 id 最终生效的配置 */
     @GetMapping("/demo/config")

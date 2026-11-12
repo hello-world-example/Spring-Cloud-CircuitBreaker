@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.DownstreamApi;
 import com.kai.learn.cbdemo.common.Errors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 
@@ -22,16 +23,12 @@ import org.springframework.stereotype.Service;
  * 为了看清「重试」，这里用一个计数器记录每次 run() 实际调用了下游多少次。
  */
 @Service
+@RequiredArgsConstructor
 public class InventoryService {
 
     private final CircuitBreakerFactory<?, ?> factory;
     private final DownstreamApi api;
     private final AtomicInteger downstreamCalls = new AtomicInteger();
-
-    public InventoryService(CircuitBreakerFactory<?, ?> factory, DownstreamApi api) {
-        this.factory = factory;
-        this.api = api;
-    }
 
     public record Result(ApiResult<Map<String, Object>> result, int downstreamCalls) {
     }

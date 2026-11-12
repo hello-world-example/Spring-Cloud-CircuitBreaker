@@ -6,6 +6,7 @@ import java.util.Map;
 import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.DownstreamApi;
 import com.kai.learn.cbdemo.common.Errors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,18 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
  * 产生一些调用，然后通过 {@code /demo/events}（自己记录的事件）和 {@code /actuator/prometheus}（标准指标）观察。
  */
 @RestController
+@RequiredArgsConstructor
 public class MetricsDemoController {
 
     private final CircuitBreakerFactory<?, ?> factory;
     private final DownstreamApi api;
     private final CircuitBreakerEventRecorder recorder;
-
-    public MetricsDemoController(CircuitBreakerFactory<?, ?> factory, DownstreamApi api,
-                                 CircuitBreakerEventRecorder recorder) {
-        this.factory = factory;
-        this.api = api;
-        this.recorder = recorder;
-    }
 
     @GetMapping("/demo/burst")
     public Map<String, Long> burst(@RequestParam(defaultValue = "12") int n) {

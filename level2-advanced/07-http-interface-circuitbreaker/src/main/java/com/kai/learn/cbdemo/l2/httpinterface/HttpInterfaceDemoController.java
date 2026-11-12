@@ -8,6 +8,7 @@ import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.CallRecord;
 import com.kai.learn.cbdemo.common.Timer;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,15 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
  * 观察接口：业务代码直接注入 {@link DownstreamHttpApi} 使用，看不到熔断代码。
  */
 @RestController
+@RequiredArgsConstructor
 public class HttpInterfaceDemoController {
 
     private final DownstreamHttpApi api;
     private final CircuitBreakerRegistry registry;
-
-    public HttpInterfaceDemoController(DownstreamHttpApi api, CircuitBreakerRegistry registry) {
-        this.api = api;
-        this.registry = registry;
-    }
 
     @GetMapping("/demo/burst")
     public List<CallRecord> burst(@RequestParam(defaultValue = "10") int n,

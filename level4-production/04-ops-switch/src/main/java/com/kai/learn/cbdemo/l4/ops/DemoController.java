@@ -7,6 +7,7 @@ import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.DownstreamApi;
 import com.kai.learn.cbdemo.common.Errors;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,17 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
  * 产生调用，配合 {@link OpsController} 观察人工干预的效果。
  */
 @RestController
+@RequiredArgsConstructor
 public class DemoController {
 
     private final CircuitBreakerFactory<?, ?> factory;
     private final CircuitBreakerRegistry registry;
     private final DownstreamApi api;
-
-    public DemoController(CircuitBreakerFactory<?, ?> factory, CircuitBreakerRegistry registry, DownstreamApi api) {
-        this.factory = factory;
-        this.registry = registry;
-        this.api = api;
-    }
 
     /** 连续调用 n 次，统计各种结果的次数 */
     @GetMapping("/demo/burst")

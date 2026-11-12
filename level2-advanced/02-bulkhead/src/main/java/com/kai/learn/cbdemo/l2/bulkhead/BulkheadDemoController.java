@@ -13,6 +13,7 @@ import java.util.concurrent.Future;
 import com.kai.learn.cbdemo.common.ApiResult;
 import com.kai.learn.cbdemo.common.DownstreamApi;
 import com.kai.learn.cbdemo.common.Errors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,15 +60,11 @@ import org.springframework.web.bind.annotation.RestController;
  * 但用 create(id, group) 时，同组的所有 id 共用一个舱壁。
  */
 @RestController
+@RequiredArgsConstructor
 public class BulkheadDemoController {
 
     private final CircuitBreakerFactory<?, ?> factory;
     private final DownstreamApi api;
-
-    public BulkheadDemoController(CircuitBreakerFactory<?, ?> factory, DownstreamApi api) {
-        this.factory = factory;
-        this.api = api;
-    }
 
     record Attempt(int seq, String source, String message, long costMs, String supplierThread, String callerThread) {
     }

@@ -10,6 +10,7 @@ import com.kai.learn.cbdemo.common.CallRecord;
 import com.kai.learn.cbdemo.common.Timer;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,15 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
  * 观察接口：业务代码中直接调用 Feign 接口，看不到任何熔断代码。
  */
 @RestController
+@RequiredArgsConstructor
 public class FeignDemoController {
 
     private final DownstreamFeignClient client;
     private final CircuitBreakerRegistry registry;
-
-    public FeignDemoController(DownstreamFeignClient client, CircuitBreakerRegistry registry) {
-        this.client = client;
-        this.registry = registry;
-    }
 
     /** 所有已经创建的熔断器：名称、状态、生效的失败率阈值。先调用几次接口再看 */
     @GetMapping("/demo/breakers")

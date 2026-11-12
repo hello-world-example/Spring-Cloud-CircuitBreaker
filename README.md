@@ -2,7 +2,10 @@
 
 > 下游故障时快速失败、给下游恢复的时间，并防止故障沿调用链蔓延成雪崩。
 >
-> 版本：JDK 25 / Spring Boot 4.0.9 / Spring Cloud 2025.1.4（CircuitBreaker 5.0.3，Resilience4j 2.3.0）
+> 版本：JDK 25 / Spring Boot 4.0.9 / Spring Cloud 2025.1.4（CircuitBreaker 5.0.3，Resilience4j 2.3.0）/ Lombok 1.18.48
+>
+> 编译时 Lombok 会打印 `sun.misc.Unsafe::objectFieldOffset has been called by lombok.permit.Permit` 警告（JDK 24+），不影响结果。
+> IDE 中需要安装 Lombok 插件（IntelliJ IDEA 已内置）。
 
 ## 快速开始
 
