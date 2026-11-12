@@ -20,6 +20,7 @@
         <dependency>
             <groupId>com.kai.learn.cbdemo</groupId>
             <artifactId>cbdemo-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <!-- Spring Boot 4 中 starter-web 改名为 starter-webmvc（旧名称仍然可用，但已标记为过时） -->
         <dependency>

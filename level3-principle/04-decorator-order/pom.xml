@@ -18,5 +18,11 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-all</artifactId>
         </dependency>
+        <!-- 测试断言（JUnit 由根 POM 统一引入） -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

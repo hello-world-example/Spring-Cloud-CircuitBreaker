@@ -25,13 +25,4 @@
         <module>framework-retry-app</module>
     </modules>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.kai.learn.cbdemo</groupId>
-                <artifactId>cbdemo-l2-06-business</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 </project>

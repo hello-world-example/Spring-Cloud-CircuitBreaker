@@ -16,6 +16,7 @@
         <dependency>
             <groupId>com.kai.learn.cbdemo</groupId>
             <artifactId>cbdemo-l2-06-business</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <!-- Spring Cloud 2025.1 新增：基于 Spring Framework 7 自带的 org.springframework.core.retry，不支持响应式 -->
         <dependency>

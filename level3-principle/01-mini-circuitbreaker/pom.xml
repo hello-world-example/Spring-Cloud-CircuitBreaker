@@ -16,11 +16,18 @@
         <dependency>
             <groupId>com.kai.learn.cbdemo</groupId>
             <artifactId>cbdemo-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <!-- 只在对照测试中使用：用同样的输入驱动手写版和 Resilience4j，比较状态是否一致 -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-circuitbreaker</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- 测试断言（JUnit 由根 POM 统一引入） -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -16,6 +16,7 @@
         <dependency>
             <groupId>com.kai.learn.cbdemo</groupId>
             <artifactId>cbdemo-l2-06-business</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <!-- 基于 Spring Retry 项目（org.springframework.retry），该项目目前处于维护状态 -->
         <dependency>

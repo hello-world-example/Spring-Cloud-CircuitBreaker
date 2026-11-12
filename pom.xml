@@ -24,7 +24,8 @@
 
   【对比】为什么 Spring Cloud 用 Release Train（2025.1.x）而不是一个统一的版本号？
     Spring Cloud 是十几个独立项目（Commons、CircuitBreaker、Gateway、OpenFeign……）的集合，每个项目都有自己的版本号
-    （例如 CircuitBreaker 是 5.0.3）。Release Train 是一份「经过验证可以一起使用」的版本清单，也就是 spring-cloud-dependencies 这个 BOM。
+    （例如 CircuitBreaker 是 5.0.3）。Release Train 是一份「经过验证可以一起使用」的版本清单，也就是 spring-cloud-dependencies 这个
+BOM。
 
   【坑】Spring Boot 和 Spring Cloud 的版本必须配套使用：
     Spring Cloud 2025.1.x  <->  Spring Boot 4.0.x
@@ -33,8 +34,8 @@
     官方兼容表：https://spring.io/projects/spring-cloud
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.kai.learn.cbdemo</groupId>
@@ -50,6 +51,8 @@
         <module>level2-advanced</module>
         <module>level3-principle</module>
         <module>level4-production</module>
+        <!-- Hello Resilience4j -->
+        <module>hello-resilience4j</module>
     </modules>
 
     <properties>
@@ -59,6 +62,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+        <!-- 插件版本：与 spring-boot-dependencies 4.0.9 中声明的版本保持一致 -->
+        <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+        <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+
         <spring-boot.version>4.0.9</spring-boot.version>
         <!--
           Spring Cloud Release Train。2025.1.4 中包含的组件版本：
@@ -67,6 +77,7 @@
             spring-cloud-openfeign      5.0.x
         -->
         <spring-cloud.version>2025.1.4</spring-cloud.version>
+        <resilience4j.version>2.4.0</resilience4j.version>
 
         <!--
           与 spring-boot-dependencies 4.0.9 中的 lombok.version 保持一致。
@@ -75,13 +86,32 @@
         -->
         <lombok.version>1.18.48</lombok.version>
 
-        <!-- 插件版本：与 spring-boot-dependencies 4.0.9 中声明的版本保持一致 -->
-        <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
-        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
-        <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
-        <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+
     </properties>
+
+    <!--
+      所有模块默认引入的依赖，只放「轻量、几乎每个模块都需要」的三个：
+        lombok          只在编译期使用，不会打进 jar
+        logback-classic 日志实现，传递引入 slf4j-api；打印日志的模块在 src/main/resources 中放一个 logback.xml
+        junit-jupiter   单元测试（Spring Boot 4.0.9 的 BOM 中是 JUnit 6，API 与 JUnit 5 相同）
+      spring-boot-starter-test 这类会带来大量传递依赖的测试套件不放在这里，哪个模块需要就在哪个模块中声明
+    -->
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <dependencyManagement>
         <dependencies>
@@ -93,7 +123,9 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- 再 import Spring Cloud 的 BOM：之后所有 org.springframework.cloud 和 io.github.resilience4j 的依赖都不用写版本 -->
+            
+            <!-- 再 import Spring Cloud 的 BOM：之后所有 org.springframework.cloud 和 io.github.resilience4j
+            的依赖都不用写版本 -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -101,33 +133,18 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- 项目内部的模块也统一在这里管理版本 -->
+
+            <!-- Source: https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom -->
             <dependency>
-                <groupId>com.kai.learn.cbdemo</groupId>
-                <artifactId>cbdemo-common</artifactId>
-                <version>${project.version}</version>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bom</artifactId>
+                <version>${resilience4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
+            <!-- 项目内部的模块不在这里管理，使用的地方直接写 <version>${project.version}</version> -->
         </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-        <!-- 所有模块默认可用：Lombok（只在编译期使用，不会打进 jar）+ SLF4J 日志门面 -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <!-- 所有模块都需要测试依赖，放在根 POM 中统一引入 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 
     <build>
         <pluginManagement>
