@@ -24,3 +24,5 @@ resilience4j:
     instances:
       downstream:
         timeout-duration: 2s
+
+

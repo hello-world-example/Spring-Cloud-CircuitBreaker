@@ -1,4 +1,4 @@
-package com.kai.learn.cbdemo;
+package io.github.hello.resiliance4j;
 
 import java.util.List;
 import java.util.function.Supplier;
