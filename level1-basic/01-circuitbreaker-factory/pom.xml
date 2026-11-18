@@ -32,12 +32,17 @@
             spring-cloud-commons                      抽象层：CircuitBreakerFactory / CircuitBreaker 接口
             spring-cloud-circuitbreaker-resilience4j  适配层：Resilience4JCircuitBreakerFactory
             resilience4j-circuitbreaker / timelimiter 实现层：真正的状态机和滑动窗口
-            resilience4j-spring-boot3                 让 resilience4j.* 配置项生效（以及 Registry Bean）
+            resilience4j-spring-boot4                 让 resilience4j.* 配置项生效（以及 Registry Bean）
           业务代码只依赖抽象层，换实现（见 L2-06）时业务代码不用改。
         -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+        <!-- 替换被排除的 resilience4j-spring-boot3（只兼容 Boot 3），见根 POM -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot4</artifactId>
         </dependency>
     </dependencies>
 

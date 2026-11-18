@@ -42,7 +42,7 @@
 
 | 现象 | 原因 | 出处 |
 |---|---|---|
-| `/actuator/health` 中没有 circuitBreakers | resilience4j-spring-boot3 的健康检查基于 Boot 3 的 API，Boot 4 下没有生效 | L2-05 |
+| `/actuator/health` 中没有 circuitBreakers | 引入的是 resilience4j-spring-boot3（基于 Boot 3 的健康检查 API，Boot 4 下不生效）。换成 resilience4j-spring-boot4，见根 POM | L2-05 |
 | 动态调参后事件监听失效 | 替换了熔断器实例，旧实例上的监听器不会转移 | L4-04 |
 | PromQL 中两个 state 指标相加结果为空 | `state` 标签不同，先 `max by (name)` 再相加 | L4-02 |
 

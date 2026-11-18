@@ -30,6 +30,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
         </dependency>
+        <!-- 替换被排除的 resilience4j-spring-boot3（只兼容 Boot 3），见根 POM -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot4</artifactId>
+        </dependency>
         <!--
           【原理】舱壁是「按需启用」的：spring-cloud-starter-circuitbreaker-resilience4j 并不包含 resilience4j-bulkhead，
           只有类路径中存在它时，Resilience4JAutoConfiguration 才会创建 Resilience4jBulkheadProvider，

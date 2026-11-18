@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
  *   <li><b>熔断器事件</b>（{@code cb.getEventPublisher()}）：SUCCESS / ERROR / IGNORED_ERROR / NOT_PERMITTED /
  *       STATE_TRANSITION / SLOW_CALL_RATE_EXCEEDED / FAILURE_RATE_EXCEEDED ……</li>
  * </ul>
- * resilience4j-spring-boot3 会自动把容器中的 {@code RegistryEventConsumer<CircuitBreaker>} Bean 注册到 Registry 上。
+ * resilience4j-spring-boot4 会自动把容器中的 {@code RegistryEventConsumer<CircuitBreaker>} Bean 注册到 Registry 上。
  *
  * 【坑】事件回调在<b>业务调用线程</b>中同步执行，里面不能做慢操作（比如同步调用告警接口），
  * 否则会拖慢每一次业务调用。告警应该异步发送，并且要去重、限频。

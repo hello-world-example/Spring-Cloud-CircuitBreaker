@@ -77,6 +77,8 @@ BOM。
             spring-cloud-openfeign      5.0.x
         -->
         <spring-cloud.version>2025.1.4</spring-cloud.version>
+        <!-- 与 spring-cloud-dependencies 2025.1.4 中的版本一致；dependencyManagement 中加 exclusions 时必须写版本 -->
+        <spring-cloud-circuitbreaker.version>5.0.3</spring-cloud-circuitbreaker.version>
         <!-- Resilience4j 2 requires Java 17 -->
         <resilience4j.version>2.4.0</resilience4j.version>
 
@@ -144,7 +146,47 @@ BOM。
                 <scope>import</scope>
             </dependency>
 
-
+            <!--
+              【坑】spring-cloud-circuitbreaker-resilience4j 5.0.x 仍然传递引入 resilience4j-spring-boot3，
+                而 resilience4j-spring-boot3 只兼容 Spring Boot 3.x。Resilience4j 2.4.0 起提供了
+                resilience4j-spring-boot4（包名 io.github.resilience4j.springboot.*），这里把 boot3 排除掉，
+                由各模块显式引入 boot4。
+              【原理】dependencyManagement 中声明的 exclusions 对传递依赖同样生效，所以只需在这里写一次，
+                spring-cloud-starter-circuitbreaker-(reactor-)resilience4j 引入它时就会自动排除。
+                Spring Cloud 的 Resilience4JAutoConfiguration 只在 @AutoConfigureAfter 中按类名引用 boot3 的类，
+                Spring Boot 通过 ASM 读取注解，类不存在时只是忽略排序，不会报错；启动时会打印一条可以忽略的 WARN：
+                Failed to introspect meta-annotation @AutoConfigureAfter ... TypeNotPresentException ... springboot3 ...
+              resilience4j-bom 2.4.0 中还没有 resilience4j-spring-boot4，所以要自己写版本。
+            -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-circuitbreaker-resilience4j</artifactId>
+                <version>${spring-cloud-circuitbreaker.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.github.resilience4j</groupId>
+                        <artifactId>resilience4j-spring-boot3</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot4</artifactId>
+                <version>${resilience4j.version}</version>
+                <!--
+                  【坑】resilience4j-spring-boot4 → resilience4j-micrometer 会传递引入 resilience4j-bulkhead。
+                    classpath 上一出现 Bulkhead 类，Spring Cloud 的 Resilience4jBulkheadProvider 就会生效，
+                    所有调用被放进 bulkhead-plain-* 线程池（disable-thread-pool 失效、ThreadLocal 丢失、
+                    超时异常被包成 ExecutionException）。
+                    Spring Cloud 原本对 boot3 做了同样的排除，这里照搬，让舱壁保持「按需启用」（见 L2-02）。
+                -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.github.resilience4j</groupId>
+                        <artifactId>resilience4j-bulkhead</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

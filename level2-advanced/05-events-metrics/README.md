@@ -38,7 +38,7 @@ spring_cloud_circuitbreaker_active_seconds_count{...}         ← Spring Cloud �
 |---|---|
 | `resilience4j_*` Micrometer 指标 | ✅ 可用，并带有 group 标签 |
 | `/actuator/circuitbreakers` 端点 | ✅ 可用 |
-| `/actuator/health` 中的 circuitBreakers 健康检查 | ❌ 没有出现。Spring Boot 4 把健康检查的 API 迁移到了新的包中，而 resilience4j-spring-boot3 是基于 Boot 3 编译的 |
+| `/actuator/health` 中的 circuitBreakers 健康检查 | ✅ 出现。熔断器是懒加载的，第一次调用前状态是 UNKNOWN。（早期用 resilience4j-spring-boot3 时不会出现：它基于 Boot 3 的健康检查 API 编译；换成 resilience4j-spring-boot4 后恢复，见根 POM） |
 
 ## 代码导读
 

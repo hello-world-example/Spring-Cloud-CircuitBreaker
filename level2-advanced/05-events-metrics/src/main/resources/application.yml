@@ -27,7 +27,7 @@ management:
   endpoints:
     web:
       exposure:
-        # circuitbreakers / circuitbreakerevents 是 resilience4j-spring-boot3 提供的端点
+        # circuitbreakers / circuitbreakerevents 是 resilience4j-spring-boot4 提供的端点
         include: health,metrics,prometheus,circuitbreakers,circuitbreakerevents
   endpoint:
     health:

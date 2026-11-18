@@ -23,6 +23,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
         </dependency>
+        <!-- 替换被排除的 resilience4j-spring-boot3（只兼容 Boot 3），见根 POM -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot4</artifactId>
+        </dependency>
         <!-- 用 @SpringBootTest 启动容器做实验，所以这个模块需要完整的 Spring Boot 测试套件（包含 AssertJ） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

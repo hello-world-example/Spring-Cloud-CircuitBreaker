@@ -80,7 +80,7 @@ seq source      state   costMs
 <details>
 <summary>1. 为什么 YAML instances 的优先级最高？这种设计有什么隐患？</summary>
 
-因为 resilience4j-spring-boot3 在启动时就把 instances 中的熔断器实例创建出来，放进了 Registry，而 Spring Cloud 在 run() 时调用的是「有则返回，没有才创建」的 `registry.circuitBreaker(id, config)`。
+因为 resilience4j-spring-boot4 在启动时就把 instances 中的熔断器实例创建出来，放进了 Registry，而 Spring Cloud 在 run() 时调用的是「有则返回，没有才创建」的 `registry.circuitBreaker(id, config)`。
 隐患：同一个 id 在 Customizer 中写的配置会被**静默忽略**，不会有任何报错。团队中应该约定只用一种配置方式。
 </details>
 

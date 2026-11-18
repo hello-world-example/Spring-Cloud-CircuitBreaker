@@ -9,7 +9,7 @@ downstream:
   base-url: http://localhost:8081
 
 # ---------------------------------------------------------------------------
-# 【原理】这些配置项是 Resilience4j 自己的（前缀不是 spring.cloud），由 resilience4j-spring-boot3 负责绑定。
+# 【原理】这些配置项是 Resilience4j 自己的（前缀不是 spring.cloud），由 resilience4j-spring-boot4 负责绑定。
 # instances.<id> 中的 id 就是代码里 factory.create("downstream") 传入的 id。
 # 默认值（窗口 100 次、至少 100 次调用才开始计算）在学习时很难观察，所以这里调小。参数的详细说明见 L1-02。
 # ---------------------------------------------------------------------------
