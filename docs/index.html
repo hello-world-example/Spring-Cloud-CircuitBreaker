@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>断路器参数计算器</title>
+<style>
+/* VOICE: plain engineering tool, no decoration
+   IDEA: an internal ops wiki page with a form and a config block
+   PICTURE: the generated config itself
+   COLOUR and TYPE: white / near-black, one muted blue for focus and active state; system fonts
+   LAYOUT: form left, output right; stacks below 900px */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#16181b);--ink:light-dark(#1d1f23,#e6e7e9);--mute:light-dark(#62666d,#9a9ea5);--line:light-dark(#dcdfe3,#33373d);--soft:light-dark(#f6f7f8,#1e2125);--acc:light-dark(#2457c5,#7ea6f2);--warn:light-dark(#a8451f,#f0a07e)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow-x:clip}
+.wrap{max-width:1180px;margin:0 auto;padding:28px max(4vw,16px) 48px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:22px}
+h1{font-size:22px;font-weight:600;margin:0}
+.sub{color:var(--mute);font-size:14px;margin:6px 0 0;max-width:72ch}
+h2{font-size:15px;font-weight:600;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:36px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+button{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 12px;min-height:34px;cursor:pointer}
+button:hover{border-color:var(--mute)}
+button.on{border-color:var(--acc);color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.seg{display:inline-flex}.seg button{border-radius:0}.seg button:first-child{border-radius:4px 0 0 4px}.seg button:last-child{border-radius:0 4px 4px 0;margin-left:-1px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+.presets span{font-size:13px;color:var(--mute);align-self:center;margin-right:2px}
+fieldset{border:0;border-top:1px solid var(--line);padding:12px 0 4px;margin:0}
+legend{font-size:13px;font-weight:600;color:var(--mute);padding:0 6px 0 0}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:10px;align-items:center;margin-bottom:8px}
+.row label{font-size:14px}
+.row small{display:block;font-size:12.5px;color:var(--mute)}
+.in{display:flex;align-items:center;border:1px solid var(--line);border-radius:4px;background:var(--bg)}
+.in:focus-within{border-color:var(--acc)}
+.in input{width:100%;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:0;padding:6px 8px;min-height:36px;text-align:right;outline:none}
+.in span{padding-right:8px;color:var(--mute);font-size:13px;white-space:nowrap}
+select{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px;min-height:36px}
+textarea{width:100%;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 8px;min-height:60px;resize:vertical}
+.tl{display:block;font-size:14px;margin:4px 0 4px}
+.warn{list-style:none;padding:0;margin:0 0 18px}
+.warn li{font-size:14px;padding:6px 0 6px 12px;border-left:2px solid var(--warn);margin-bottom:6px}
+.warn li.info{border-color:var(--line);color:var(--mute)}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.bar .sp{flex:1}
+pre{overflow-x:auto;margin:0;background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:14px;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre .c{color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0 0}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;font-size:13px;color:var(--mute)}
+td.n{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+td code{font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+td.why{color:var(--mute)}
+section+section{margin-top:28px}
+details{margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer;font-weight:600;font-size:14px}
+details li{color:var(--mute);font-size:14px;margin-bottom:4px}
+.note{font-size:13px;color:var(--mute);margin-top:18px}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:2px 0;padding-inline-start:6em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:5.5em;margin-inline-start:-6em;color:var(--mute)}.row{grid-template-columns:minmax(0,1fr) 124px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+ <div><h1 id="title"></h1><p class="sub" id="sub"></p></div>
+ <div class="seg" id="lang"><button type="button" data-l="zh">中文</button><button type="button" data-l="en">EN</button></div>
+</div>
+
+<div class="grid">
+<form id="f" autocomplete="off">
+ <div class="presets" id="presets"></div>
+ <div id="fields"></div>
+ <button type="button" id="reset" style="margin-top:8px"></button>
+</form>
+
+<div>
+ <section>
+  <ul class="warn" id="warn"></ul>
+  <div class="bar"><div class="seg" id="tabs"><button type="button" data-t="yaml">application.yml</button><button type="button" data-t="java">Java</button></div><span class="sp"></span><button type="button" id="copy"></button></div>
+  <pre id="out"></pre>
+ </section>
+ <section>
+  <h2 id="h-table"></h2>
+  <table class="stack"><thead><tr><th id="th1"></th><th id="th2"></th><th id="th3"></th></tr></thead><tbody id="tb"></tbody></table>
+ </section>
+ <details><summary id="h-rules"></summary><ul id="rules"></ul></details>
+ <p class="note" id="note"></p>
+</div>
+</div>
+</div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const T={
+zh:{title:'Resilience4j 断路器参数计算器',sub:'填入下游服务的现状指标，右侧实时生成一套初始配置及推导依据。结果来自经验规则，上线前请用历史流量回放或故障注入验证。',
+ presets:'示例：',reset:'恢复示例数据',copy:'复制',copied:'已复制',selected:'已选中，按 Ctrl+C',hTable:'参数与依据',th:['参数','值','依据'],hRules:'推导规则',
+ note:'示例数据为虚构，仅用于演示。输入只保存在你自己的浏览器里。',
+ sec:{basic:'基本信息',traffic:'流量',latency:'延迟',errors:'错误率',recovery:'下游恢复',exc:'异常分类'},
+ f:{name:['实例名'],avgQps:['平均 QPS'],minQps:['低峰 QPS','夜间或最低时段'],p50:['P50 延迟'],p99:['P99 延迟'],timeout:['现有超时时间','TimeLimiter 或 HTTP client'],baseErr:['正常时期错误率峰值','仅统计故障类异常'],failErr:['故障时期错误率'],failSlow:['下游变慢时慢调用占比','超过 P99×1.5 的请求比例'],recMed:['恢复时间中位数'],recMax:['恢复时间最长值'],fragile:['下游承压能力'],rec:['计入失败的异常（每行一个）'],ign:['忽略的业务异常（每行一个）']},
+ u:{qps:'次/秒',ms:'ms',pct:'%',s:'秒'},
+ frag:{20:'稳健，可承受探测流量',10:'一般',5:'脆弱，恢复期容易被压垮'},
+ pn:['高并发核心服务','低流量内部服务','脆弱的第三方 API'],
+ rules:['窗口类型：低峰 QPS 低于 5，或平均与低峰相差 5 倍以上时用 TIME_BASED，否则用 COUNT_BASED。','TIME_BASED 窗口：让低峰期一个窗口内约有 100 次调用，限制在 10～60 秒。COUNT_BASED 窗口约为平均 QPS × 10 秒，限制在 50～1000。','最小调用数：约为低峰期一个窗口调用量的一半，至少 10（COUNT_BASED 至少 20）。','失败率阈值：取“正常峰值 + 15 个百分点”与“正常、故障错误率中点”中较大者，限制在 20%～80%，取 5 的整数倍。','慢调用阈值：P99 × 1.5，不超过超时时间的 80%，取 50ms 的整数倍。慢调用比例阈值取约 1% 与故障时比例的中点，限制在 30%～90%。','开启等待：取恢复时间中位数，限制在 5～120 秒。最长恢复时间超过中位数 3 倍时启用指数退避（倍数 2，上限为最长恢复时间）。','误熔断概率：用二项分布的正态近似，估算正常时期一个窗口内错误率因随机波动超过阈值的概率。'],
+ why:{
+  tbLow:m=>`低峰 QPS 只有 ${m}，按次数统计的窗口会长时间填不满`,
+  tbRatio:r=>`平均与低峰 QPS 相差 ${r} 倍，按时间统计更稳定`,
+  tbSize:(m,s,n)=>`让低峰期一个窗口内约有 100 次调用（${m} × ${s} ≈ ${n}）`,
+  cb:'流量稳定且较高，按次数统计响应最快',cbSize:'约为平均 QPS × 10 秒',
+  minCalls:k=>`约为低峰期一个窗口调用量的一半，至少 ${k} 次，避免小样本误判`,
+  thr:(b,m)=>`正常峰值 ${b}% 加 15 个百分点，与正常/故障中点 ${m}% 取较大者`,
+  slow:(p,t)=>`P99 ${p}ms × 1.5，且不超过超时时间 ${t}ms 的 80%`,
+  sthr:f=>`正常时期慢调用约 1%，下游变慢时约 ${f}%，取中点`,
+  wait:m=>`取恢复时间中位数 ${m} 秒，限制在 5～120 秒`,
+  expo:(x,m)=>`最长恢复时间 ${x} 秒超过中位数的 3 倍，用指数退避逐步拉长等待，倍数 2，上限 ${m} 秒`,
+  half:{5:'下游脆弱，半开时只放少量探测请求',10:'适中的探测量',20:'下游稳健，多探测一些判断更准'},
+  auto:'等待结束后自动进入半开，不必等下一次请求触发',
+  to:'沿用现有超时时间，需大于慢调用阈值'},
+ w:{
+  lowTraffic:n=>`低峰期一个窗口内的调用量（约 ${n} 次）少于最小调用数，低峰时断路器基本不会动作。可以接受这一点，或者改用健康检查、主动探测。`,
+  thrHigh:(f,t)=>`故障时期错误率 ${f}% 没有超过阈值 ${t}%，靠失败率很难熔断。建议依靠慢调用比例或超时来触发。`,
+  baseHigh:b=>`正常时期错误率高达 ${b}%，请确认是否把业务异常（如 4xx）也计入了失败。`,
+  tight:(v,t)=>`P99 × 1.5 = ${v}ms 已接近超时时间 ${t}ms。超时偏紧，大量请求会以超时而不是慢调用的形式出现。`,
+  tail:r=>`P99 是 P50 的 ${r} 倍，长尾较重，慢调用阈值可能需要按接口分别设置。`,
+  risk:p=>`按当前参数，正常时期单个窗口误熔断的概率约 ${p}%。可以调大最小调用数或窗口。`,
+  riskOk:p=>`正常时期单个窗口误熔断的概率约 ${p}%。`},
+ c:{
+  type:'统计窗口类型：COUNT_BASED 按调用次数，TIME_BASED 按秒数',
+  size:t=>t?'窗口长度（秒）':'窗口长度（最近 N 次调用）',
+  minCalls:'窗口内至少有这么多次调用才开始计算失败率',
+  thr:'失败率达到此百分比时断开',
+  slow:'耗时超过此值的调用记为慢调用',
+  sthr:'慢调用占比达到此百分比时断开',
+  wait:'断开后等待多久进入半开',
+  expo:'启用指数退避：每次重新断开后等待时间翻倍',
+  mult:'退避倍数',maxw:'最长等待时间',
+  ivf:'断开后等待时间：从 {a} 秒开始指数退避，倍数 2，最长 {b} 秒',
+  half:'半开状态下放行的探测调用数',
+  auto:'等待结束后自动转入半开',
+  rec:'计入失败的异常',ign:'忽略的异常：不计成功也不计失败',
+  tl:'调用超时时间，应大于慢调用阈值'}},
+en:{title:'Resilience4j Circuit Breaker Calculator',sub:'Enter what you know about the downstream service. The page derives a starting configuration and explains each value. These are rules of thumb: validate with traffic replay or fault injection before production.',
+ presets:'Examples:',reset:'Restore sample data',copy:'Copy',copied:'Copied',selected:'Selected, press Ctrl+C',hTable:'Parameters and rationale',th:['Parameter','Value','Rationale'],hRules:'Derivation rules',
+ note:'Sample data is made up for illustration. Inputs are stored only in your own browser.',
+ sec:{basic:'Basics',traffic:'Traffic',latency:'Latency',errors:'Error rates',recovery:'Downstream recovery',exc:'Exceptions'},
+ f:{name:['Instance name'],avgQps:['Average QPS'],minQps:['Off-peak QPS','Lowest period, e.g. overnight'],p50:['P50 latency'],p99:['P99 latency'],timeout:['Current timeout','TimeLimiter or HTTP client'],baseErr:['Peak error rate, normal','Fault-type exceptions only'],failErr:['Error rate during outages'],failSlow:['Slow-call share when degraded','Calls above P99×1.5'],recMed:['Median recovery time'],recMax:['Longest recovery time'],fragile:['Downstream resilience'],rec:['Exceptions that count as failures (one per line)'],ign:['Business exceptions to ignore (one per line)']},
+ u:{qps:'req/s',ms:'ms',pct:'%',s:'s'},
+ frag:{20:'Robust, can take probe traffic',10:'Average',5:'Fragile, easily overwhelmed while recovering'},
+ pn:['High-traffic core service','Low-traffic internal service','Fragile third-party API'],
+ rules:['Window type: TIME_BASED if off-peak QPS is below 5 or average is more than 5× off-peak; otherwise COUNT_BASED.','TIME_BASED window: about 100 calls per window at off-peak, clamped to 10–60 s. COUNT_BASED window: about average QPS × 10 s, clamped to 50–1000.','Minimum calls: about half of one off-peak window, at least 10 (20 for COUNT_BASED).','Failure-rate threshold: the larger of "normal peak + 15 points" and the midpoint of normal and outage error rates, clamped to 20–80%, rounded to 5.','Slow-call duration: P99 × 1.5, capped at 80% of the timeout, rounded to 50 ms. Slow-call rate: midpoint of ~1% and the degraded share, clamped to 30–90%.','Open-state wait: median recovery time, clamped to 5–120 s. If the longest recovery exceeds 3× the median, use exponential backoff (×2, capped at the longest recovery).','False-trip probability: normal approximation to the binomial — the chance that random noise pushes one window above the threshold during normal operation.'],
+ why:{
+  tbLow:m=>`Off-peak QPS is only ${m}; a count-based window would take too long to fill`,
+  tbRatio:r=>`Average is ${r}× off-peak QPS; a time-based window is steadier`,
+  tbSize:(m,s,n)=>`About 100 calls per window at off-peak (${m} × ${s} ≈ ${n})`,
+  cb:'Traffic is steady and high; count-based reacts fastest',cbSize:'About average QPS × 10 s',
+  minCalls:k=>`About half of one off-peak window, at least ${k}, to avoid tripping on tiny samples`,
+  thr:(b,m)=>`Larger of normal peak ${b}% + 15 points and normal/outage midpoint ${m}%`,
+  slow:(p,t)=>`P99 ${p} ms × 1.5, capped at 80% of the ${t} ms timeout`,
+  sthr:f=>`~1% slow calls normally, ~${f}% when degraded; take the midpoint`,
+  wait:m=>`Median recovery time ${m} s, clamped to 5–120 s`,
+  expo:(x,m)=>`Longest recovery ${x} s is over 3× the median; back off exponentially (×2, max ${m} s)`,
+  half:{5:'Fragile downstream: let only a few probes through',10:'Moderate probe volume',20:'Robust downstream: more probes give a surer verdict'},
+  auto:'Move to half-open when the wait ends, without waiting for a request',
+  to:'Keeps your current timeout; must exceed the slow-call threshold'},
+ w:{
+  lowTraffic:n=>`An off-peak window holds only ~${n} calls, fewer than the minimum, so the breaker will rarely act off-peak. Accept that, or add health checks or active probing.`,
+  thrHigh:(f,t)=>`The outage error rate (${f}%) does not exceed the threshold (${t}%), so failures alone will rarely trip it. Rely on slow-call rate or timeouts.`,
+  baseHigh:b=>`Normal error rate is ${b}%. Check that business errors (e.g. 4xx) are not being counted as failures.`,
+  tight:(v,t)=>`P99 × 1.5 = ${v} ms is close to the ${t} ms timeout. Many calls will surface as timeouts rather than slow calls.`,
+  tail:r=>`P99 is ${r}× P50. With a long tail like this, consider per-endpoint slow-call thresholds.`,
+  risk:p=>`With these settings, the chance of a false trip in one normal window is about ${p}%. Raise minimum calls or the window size.`,
+  riskOk:p=>`False-trip chance per normal window: about ${p}%.`},
+ c:{
+  type:'Window type: COUNT_BASED counts calls, TIME_BASED counts seconds',
+  size:t=>t?'Window length in seconds':'Window length: last N calls',
+  minCalls:'Minimum calls in the window before the failure rate is evaluated',
+  thr:'Open when the failure rate reaches this percentage',
+  slow:'Calls slower than this count as slow',
+  sthr:'Open when the slow-call share reaches this percentage',
+  wait:'Time to stay open before going half-open',
+  expo:'Exponential backoff: wait doubles each time the breaker reopens',
+  mult:'Backoff multiplier',maxw:'Maximum wait',
+  ivf:'Open-state wait: exponential backoff from {a} s, ×2, up to {b} s',
+  half:'Probe calls allowed in half-open state',
+  auto:'Switch to half-open automatically when the wait ends',
+  rec:'Exceptions recorded as failures',ign:'Ignored exceptions: count as neither success nor failure',
+  tl:'Call timeout; should exceed the slow-call threshold'}}
+};
+const SECS=[['basic',['name']],['traffic',[['avgQps','qps'],['minQps','qps']]],['latency',[['p50','ms'],['p99','ms'],['timeout','ms']]],['errors',[['baseErr','pct'],['failErr','pct'],['failSlow','pct']]],['recovery',[['recMed','s'],['recMax','s'],'fragile']],['exc',['rec','ign']]];
+const F=['name','avgQps','minQps','p50','p99','timeout','baseErr','failErr','failSlow','recMed','recMax','fragile','rec','ign'];
+const P=[
+ {name:'orderService',avgQps:800,minQps:120,p50:40,p99:220,timeout:1000,baseErr:0.8,failErr:60,failSlow:70,recMed:30,recMax:90,fragile:'20',rec:'java.io.IOException\njava.util.concurrent.TimeoutException\norg.springframework.web.client.HttpServerErrorException',ign:'com.example.BusinessException\norg.springframework.web.client.HttpClientErrorException'},
+ {name:'reportService',avgQps:6,minQps:0.3,p50:120,p99:900,timeout:3000,baseErr:3,failErr:70,failSlow:80,recMed:20,recMax:40,fragile:'10',rec:'java.io.IOException\njava.util.concurrent.TimeoutException',ign:'com.example.BusinessException'},
+ {name:'paymentGateway',avgQps:40,minQps:5,p50:300,p99:1800,timeout:2500,baseErr:4,failErr:45,failSlow:85,recMed:60,recMax:600,fragile:'5',rec:'java.io.IOException\njava.util.concurrent.TimeoutException\nfeign.RetryableException',ign:'com.example.PaymentDeclinedException'}];
+let lang='zh',tab='yaml',preset=0,cfg=null;
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const r5=v=>Math.round(v/5)*5;
+const r50=v=>Math.max(50,Math.round(v/50)*50);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lines=s=>s.split('\n').map(x=>x.trim()).filter(Boolean);
+function erfc(x){const t=1/(1+.5*Math.abs(x));const y=t*Math.exp(-x*x-1.26551223+t*(1.00002368+t*(.37409196+t*(.09678418+t*(-.18628806+t*(.27886807+t*(-1.13520398+t*(1.48851587+t*(-.82215223+t*.17087277)))))))));return x>=0?y:2-y}
+
+function buildForm(vals){
+ const L=T[lang];
+ $('fields').innerHTML=SECS.map(([s,items])=>`<fieldset><legend>${L.sec[s]}</legend>`+items.map(it=>{
+  const [id,u]=Array.isArray(it)?it:[it];const [lab,hint]=L.f[id];
+  if(id==='rec'||id==='ign')return `<label class="tl" for="${id}">${lab}</label><textarea id="${id}"></textarea>`;
+  const l=`<label for="${id}">${lab}${hint?`<small>${hint}</small>`:''}</label>`;
+  if(id==='fragile')return `<div class="row">${l}<select id="fragile">${[20,10,5].map(v=>`<option value="${v}">${L.frag[v]}</option>`).join('')}</select></div>`;
+  if(id==='name')return `<div class="row">${l}<div class="in"><input id="name" type="text" style="text-align:left"></div></div>`;
+  return `<div class="row">${l}<div class="in"><input id="${id}" type="number" min="0" step="any"><span>${L.u[u]}</span></div></div>`;
+ }).join('')+`</fieldset>`).join('');
+ F.forEach(k=>{if(vals[k]!==undefined&&vals[k]!==null&&!(typeof vals[k]==='number'&&isNaN(vals[k])))$(k).value=vals[k]});
+}
+function read(){const o={};F.forEach(k=>{const e=$(k);o[k]=e.type==='number'?parseFloat(e.value):e.value});return o}
+
+function calc(i){
+ const L=T[lang],Y=L.why,Wt=L.w,W=[],rows=[];
+ const n=v=>isFinite(v)&&v>=0;
+ const avg=n(i.avgQps)?i.avgQps:0,min=n(i.minQps)?i.minQps:avg,base=n(i.baseErr)?i.baseErr:1,fail=n(i.failErr)?i.failErr:50;
+ const timeBased=min<5||avg/min>5;
+ let size,minCalls,k;
+ if(timeBased){
+  size=clamp(Math.ceil(100/Math.max(min,0.01)),10,60);k=10;
+  minCalls=clamp(Math.round(min*size*0.5),10,200);
+  rows.push(['slidingWindowType','TIME_BASED',min<5?Y.tbLow(min):Y.tbRatio((avg/min).toFixed(1))]);
+  rows.push(['slidingWindowSize',size+(lang==='zh'?' 秒':' s'),Y.tbSize(min,size,Math.round(min*size))]);
+ }else{
+  size=clamp(Math.round(avg*10),50,1000);k=20;
+  minCalls=clamp(Math.round(min*10*0.5),20,size);
+  rows.push(['slidingWindowType','COUNT_BASED',Y.cb]);
+  rows.push(['slidingWindowSize',size,Y.cbSize]);
+ }
+ const winCalls=timeBased?min*size:size;
+ if(winCalls<minCalls)W.push([Wt.lowTraffic(Math.round(winCalls)),'info']);
+ rows.push(['minimumNumberOfCalls',minCalls,Y.minCalls(k)]);
+ const thr=clamp(r5(Math.max(base+15,(base+fail)/2)),20,80);
+ rows.push(['failureRateThreshold',thr+'%',Y.thr(base,((base+fail)/2).toFixed(1))]);
+ if(thr>=fail)W.push([Wt.thrHigh(fail,thr)]);
+ if(base>20)W.push([Wt.baseHigh(base)]);
+ const p99=n(i.p99)?i.p99:500,to=n(i.timeout)&&i.timeout>0?i.timeout:p99*3;
+ let slow=r50(p99*1.5);
+ if(slow>to*0.8){slow=r50(to*0.8);W.push([Wt.tight(Math.round(p99*1.5),to)])}
+ rows.push(['slowCallDurationThreshold',slow+' ms',Y.slow(p99,to)]);
+ const fs=n(i.failSlow)?i.failSlow:60;
+ const sthr=clamp(r5((1+fs)/2),30,90);
+ rows.push(['slowCallRateThreshold',sthr+'%',Y.sthr(fs)]);
+ if(n(i.p50)&&i.p50>0&&p99/i.p50>20)W.push([Wt.tail(Math.round(p99/i.p50)),'info']);
+ const med=n(i.recMed)&&i.recMed>0?i.recMed:30,mx=n(i.recMax)&&i.recMax>0?i.recMax:med;
+ const wait=clamp(Math.round(med),5,120),expo=mx>med*3,maxWait=expo?Math.round(mx):0;
+ rows.push(['waitDurationInOpenState',wait+(lang==='zh'?' 秒':' s'),Y.wait(med)]);
+ if(expo)rows.push(['enableExponentialBackoff','true',Y.expo(mx,maxWait)]);
+ const half=parseInt(i.fragile)||10;
+ rows.push(['permittedNumberOfCallsInHalfOpenState',half,Y.half[half]||Y.half[10]]);
+ rows.push(['automaticTransitionFromOpenToHalfOpenEnabled','true',Y.auto]);
+ rows.push(['timelimiter.timeoutDuration',to+' ms',Y.to]);
+ const pb=Math.max(base,0.05)/100;
+ const z=(thr/100-pb)/Math.sqrt(pb*(1-pb)/Math.max(minCalls,1));
+ const risk=0.5*erfc(z/Math.SQRT2),rp=risk*100<0.01?'< 0.01':(risk*100).toFixed(2);
+ W.push(risk>0.001?[Wt.risk(rp)]:[Wt.riskOk(rp),'info']);
+ return {name:(i.name||'backend').replace(/[^\w-]/g,'')||'backend',timeBased,size,minCalls,thr,slow,sthr,wait,expo,maxWait,half,to,rec:lines(i.rec||''),ign:lines(i.ign||''),rows,W};
+}
+
+function yaml(c){
+ const C=T[lang].c,o=[],kv=(cm,line,ind='        ')=>{o.push(`${ind}# ${cm}`,ind+line)};
+ o.push('resilience4j:','  circuitbreaker:','    instances:',`      ${c.name}:`);
+ kv(C.type,`slidingWindowType: ${c.timeBased?'TIME_BASED':'COUNT_BASED'}`);
+ kv(C.size(c.timeBased),`slidingWindowSize: ${c.size}`);
+ kv(C.minCalls,`minimumNumberOfCalls: ${c.minCalls}`);
+ kv(C.thr,`failureRateThreshold: ${c.thr}`);
+ kv(C.slow,`slowCallDurationThreshold: ${c.slow}ms`);
+ kv(C.sthr,`slowCallRateThreshold: ${c.sthr}`);
+ kv(C.wait,`waitDurationInOpenState: ${c.wait}s`);
+ if(c.expo){kv(C.expo,'enableExponentialBackoff: true');kv(C.mult,'exponentialBackoffMultiplier: 2');kv(C.maxw,`exponentialMaxWaitDurationInOpenState: ${c.maxWait}s`)}
+ kv(C.half,`permittedNumberOfCallsInHalfOpenState: ${c.half}`);
+ kv(C.auto,'automaticTransitionFromOpenToHalfOpenEnabled: true');
+ if(c.rec.length){kv(C.rec,'recordExceptions:');c.rec.forEach(e=>o.push(`          - ${e}`))}
+ if(c.ign.length){kv(C.ign,'ignoreExceptions:');c.ign.forEach(e=>o.push(`          - ${e}`))}
+ o.push('  timelimiter:','    instances:',`      ${c.name}:`);
+ kv(C.tl,`timeoutDuration: ${c.to}ms`);
+ return o.join('\n');
+}
+function java(c){
+ const C=T[lang].c,o=[],kv=(cm,line)=>o.push(`    // ${cm}`,`    ${line}`);
+ o.push('CircuitBreakerConfig config = CircuitBreakerConfig.custom()');
+ kv(C.type,`.slidingWindowType(SlidingWindowType.${c.timeBased?'TIME_BASED':'COUNT_BASED'})`);
+ kv(C.size(c.timeBased),`.slidingWindowSize(${c.size})`);
+ kv(C.minCalls,`.minimumNumberOfCalls(${c.minCalls})`);
+ kv(C.thr,`.failureRateThreshold(${c.thr})`);
+ kv(C.slow,`.slowCallDurationThreshold(Duration.ofMillis(${c.slow}))`);
+ kv(C.sthr,`.slowCallRateThreshold(${c.sthr})`);
+ if(c.expo){o.push(`    // ${C.ivf.replace('{a}',c.wait).replace('{b}',c.maxWait)}`,'    .waitIntervalFunctionInOpenState(IntervalFunction.ofExponentialBackoff(',`        Duration.ofSeconds(${c.wait}), 2.0, Duration.ofSeconds(${c.maxWait})))`)}
+ else kv(C.wait,`.waitDurationInOpenState(Duration.ofSeconds(${c.wait}))`);
+ kv(C.half,`.permittedNumberOfCallsInHalfOpenState(${c.half})`);
+ kv(C.auto,'.automaticTransitionFromOpenToHalfOpenEnabled(true)');
+ if(c.rec.length)kv(C.rec,`.recordExceptions(${c.rec.map(s=>s+'.class').join(', ')})`);
+ if(c.ign.length)kv(C.ign,`.ignoreExceptions(${c.ign.map(s=>s+'.class').join(', ')})`);
+ o.push('    .build();','',`// ${C.tl}`,'TimeLimiterConfig tlConfig = TimeLimiterConfig.custom()',`    .timeoutDuration(Duration.ofMillis(${c.to}))`,'    .build();');
+ return o.join('\n');
+}
+function paint(txt){return txt.split('\n').map(l=>/^\s*(#|\/\/)/.test(l)?`<span class="c">${esc(l)}</span>`:esc(l)).join('\n')}
+
+function texts(){
+ const L=T[lang];
+ document.documentElement.lang=lang==='zh'?'zh-CN':'en';
+ document.title=lang==='zh'?'断路器参数计算器':'Circuit Breaker Calculator';
+ $('title').textContent=L.title;$('sub').textContent=L.sub;$('reset').textContent=L.reset;$('copy').textContent=L.copy;
+ $('h-table').textContent=L.hTable;L.th.forEach((t,k)=>$('th'+(k+1)).textContent=t);
+ $('h-rules').textContent=L.hRules;$('rules').innerHTML=L.rules.map(r=>`<li>${esc(r)}</li>`).join('');$('note').textContent=L.note;
+ $('presets').innerHTML=`<span>${L.presets}</span>`+L.pn.map((p,k)=>`<button type="button" data-p="${k}" class="${k===preset?'on':''}">${p}</button>`).join('');
+ document.querySelectorAll('#lang button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang));
+ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+ document.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('on',+b.dataset.p===preset));
+}
+function render(){
+ const i=read();store.set('cbtuner',i);store.set('cbtuner-ui',{lang,tab});cfg=calc(i);
+ $('warn').innerHTML=cfg.W.map(([t,k])=>`<li class="${k||''}">${esc(t)}</li>`).join('');
+ $('out').innerHTML=paint(tab==='yaml'?yaml(cfg):java(cfg));
+ $('tb').innerHTML=cfg.rows.map(([a,b,w])=>`<tr><td><code>${esc(a)}</code></td><td class="n">${esc(b)}</td><td class="why">${esc(w)}</td></tr>`).join('');
+}
+function setPreset(k){preset=k;buildForm(P[k]);texts();render()}
+
+$('presets').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b)setPreset(+b.dataset.p)});
+$('f').addEventListener('input',()=>{preset=-1;document.querySelectorAll('[data-p]').forEach(b=>b.classList.remove('on'));render()});
+$('f').addEventListener('submit',e=>e.preventDefault());
+$('reset').addEventListener('click',()=>setPreset(0));
+$('lang').addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(!b||b.dataset.l===lang)return;const v=read();lang=b.dataset.l;buildForm(v);texts();render()});
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;tab=b.dataset.t;texts();render()});
+$('copy').addEventListener('click',async()=>{const b=$('copy'),L=T[lang];try{await navigator.clipboard.writeText($('out').textContent);b.textContent=L.copied}catch(e){const r=document.createRange();r.selectNodeContents($('out'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent=L.selected}setTimeout(()=>b.textContent=L.copy,1600)});
+
+const ui=store.get('cbtuner-ui');if(ui){if(T[ui.lang])lang=ui.lang;if(ui.tab==='java')tab='java'}
+const saved=store.get('cbtuner');
+if(saved){preset=-1;buildForm(saved);texts();render()}else setPreset(0);
+}
+</script>
+</body>
+</html>
