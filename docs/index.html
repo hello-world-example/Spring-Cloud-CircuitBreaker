@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -194,7 +194,7 @@ const P=[
  {name:'orderService',avgQps:800,minQps:120,p50:40,p99:220,timeout:1000,baseErr:0.8,failErr:60,failSlow:70,recMed:30,recMax:90,fragile:'20',rec:'java.io.IOException\njava.util.concurrent.TimeoutException\norg.springframework.web.client.HttpServerErrorException',ign:'com.example.BusinessException\norg.springframework.web.client.HttpClientErrorException'},
  {name:'reportService',avgQps:6,minQps:0.3,p50:120,p99:900,timeout:3000,baseErr:3,failErr:70,failSlow:80,recMed:20,recMax:40,fragile:'10',rec:'java.io.IOException\njava.util.concurrent.TimeoutException',ign:'com.example.BusinessException'},
  {name:'paymentGateway',avgQps:40,minQps:5,p50:300,p99:1800,timeout:2500,baseErr:4,failErr:45,failSlow:85,recMed:60,recMax:600,fragile:'5',rec:'java.io.IOException\njava.util.concurrent.TimeoutException\nfeign.RetryableException',ign:'com.example.PaymentDeclinedException'}];
-let lang='zh',tab='yaml',preset=0,cfg=null;
+let lang='en',tab='yaml',preset=0,cfg=null;
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const r5=v=>Math.round(v/5)*5;
@@ -331,7 +331,7 @@ $('lang').addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(!
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;tab=b.dataset.t;texts();render()});
 $('copy').addEventListener('click',async()=>{const b=$('copy'),L=T[lang];try{await navigator.clipboard.writeText($('out').textContent);b.textContent=L.copied}catch(e){const r=document.createRange();r.selectNodeContents($('out'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent=L.selected}setTimeout(()=>b.textContent=L.copy,1600)});
 
-const ui=store.get('cbtuner-ui');if(ui){if(T[ui.lang])lang=ui.lang;if(ui.tab==='java')tab='java'}
+const ui=store.get('cbtuner-ui');if(ui){if(ui.tab==='java')tab='java'}
 const saved=store.get('cbtuner');
 if(saved){preset=-1;buildForm(saved);texts();render()}else setPreset(0);
 }
